@@ -1,4 +1,4 @@
-name: "Github mention to Slack"
+name: "Mention to Slack Actions"
 description: "Convert Github mention to Slack mention"
 inputs:
   configuration-path:
