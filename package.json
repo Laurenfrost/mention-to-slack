@@ -1,0 +1,39 @@
+{
+  "name": "actions-mention-to-slack",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@actions/core": "^1.2.3",
+    "@actions/github": "^4.0.0",
+    "axios": "^0.21.0",
+    "js-yaml": "^3.13.1"
+  },
+  "devDependencies": {
+    "@types/jest": "26.0.15",
+    "@types/js-yaml": "3.12.5",
+    "@typescript-eslint/eslint-plugin": "4.6.1",
+    "@typescript-eslint/parser": "4.6.1",
+    "@zeit/ncc": "0.22.3",
+    "eslint": "7.11.0",
+    "jest": "26.6.2",
+    "ts-jest": "26.4.1",
+    "ts-node": "9.0.0",
+    "typescript": "4.0.5"
+  },
+  "scripts": {
+    "test": "jest",
+    "build": "ncc build --source-map",
+    "lint": "tsc --noEmit && eslint --ext .js,.ts ./"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abeyuya/actions-mention-to-slack.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/abeyuya/actions-mention-to-slack/issues"
+  },
+  "homepage": "https://github.com/abeyuya/actions-mention-to-slack#readme"
+}
