@@ -3,7 +3,13 @@ name: Release latest tag
 on:
   push:
     branches:
-      - master
+      - "!release"
+    paths:
+      - "src/**"
+      - "__tests__/**"
+      - "*.js"
+      - "*.json"
+      - ".github/workflows/test.yml"
 
 jobs:
   push-latest-tag:
