@@ -262,8 +262,8 @@ export const main = async (): Promise<void> => {
   const allInputs = getAllInputs();
 
   try {
-    const message = `<${payload.action}> is payload.action.`;
-    console.log(message);
+    const message1 = `<${payload.action}> is payload.action.`;
+    console.log(message1);
     if (payload.action === "review_requested") {
       await execPrReviewRequestedMention(
         payload,
@@ -274,8 +274,9 @@ export const main = async (): Promise<void> => {
       );
       return;
     }
-    console.log(payload.pull_requests);
-    if (payload.pull_requests !== null && payload.pull_requests !== void 0) {
+    const message2 = `pull_requests id is <${payload.pull_requests?.id}>`
+    console.log(message2);
+    if (payload.pull_requests?.id !== null && payload.pull_requests?.id !== void 0) {
       await execPullRequestMention(
         payload,
         allInputs,
