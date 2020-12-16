@@ -1,6 +1,7 @@
 # Convert Github mention to Slack mention
 
-!!! This action modified from [actions-mention-to-slack](https://github.com/abeyuya/actions-mention-to-slack)
+!!! This action modified from [actions-mention-to-slack](https://github.com/abeyuya/actions-mention-to-slack) !!!
+
 This action sends mention to your slack account when you have been mentioned at github.
 
 ## Feature
