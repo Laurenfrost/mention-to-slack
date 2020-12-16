@@ -1651,6 +1651,7 @@ exports.main = async () => {
             await exports.execPrReviewRequestedMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
             return;
         }
+        console.log(payload.pull_requests);
         if (payload.pull_requests !== null && payload.pull_requests !== void 0) {
             await exports.execPullRequestMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
             return;
