@@ -7,9 +7,15 @@ This action sends mention to your slack account when you have been mentioned at 
 ## Feature
 
 - Send mention to slack if you have been mentioned
-  - issue
   - pull request
 - Send notification to slack if you have been requested to review.
+
+## TODO
+
+- Send mention to slack if you have been mentioned
+  - pull request comments
+  - issue
+  - more and more
 
 ## Inputs
 
@@ -18,6 +24,7 @@ This action sends mention to your slack account when you have been mentioned at 
 | configuration-path | Yes | .github/mention-to-slack.yml | Mapping config for Github username to Slack member ID. |
 | slack-webhook-url | Yes | Null | Slack Incomming Webhook URL to notify. |
 | repo-token | Yes | Null | Github access token to fetch .github/mention-to-slack.yml file. |
+| github-event-name | Yes | Null | Event name that triggered the actions. |
 | bot-name | No | Github Mention To Slack | Display name for this bot on Slack. |
 | icon-url | No | Null | Display icon url for this bot on Slack. |
 | run-id | No | Null | Used for the link in the error message when an error occurs. |
@@ -27,13 +34,15 @@ This action sends mention to your slack account when you have been mentioned at 
 .github/workflows/mention-to-slack.yml
 
 ```yml
+name: mention-to-slack-actions
+
 on:
   issues:
     types: [opened, edited]
   issue_comment:
     types: [created, edited]
   pull_request:
-    types: [opened, edited, review_requested]
+    types: [opened, reopened, edited, closed, review_requested]
   pull_request_review:
     types: [submitted]
   pull_request_review_comment:
@@ -43,13 +52,15 @@ jobs:
   mention-to-slack:
     runs-on: ubuntu-latest
     steps:
-      - name: Run
-        uses: abeyuya/actions-mention-to-slack@v2
+      - name: Mention to Slack Actions
+        uses: Laurenfrost/mention-to-slack@latest
         with:
+          configuration-path: .github/mention-to-slack.yml
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          icon-url: https://img.icons8.com/color/256/000000/github-2.png
-          bot-name: "Send Mention from abeyuya/actions-mention-to-slack"
+          github-event-name: ${{ github.event_name }}
+          icon-url: https://github.githubassets.com/images/modules/logos_page/Octocat.png
+          bot-name: ${{github.repository}}
           run-id: ${{ github.run_id }}
 ```
 
