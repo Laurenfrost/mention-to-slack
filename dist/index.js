@@ -1626,6 +1626,10 @@ const getAllInputs = () => {
     if (!repoToken) {
         core.setFailed("Error! Need to set `repo-token`.");
     }
+    const githubEventName = core.getInput("github-event-name", { required: true });
+    if (!githubEventName) {
+        core.setFailed("Error! Need to set `github-event-name");
+    }
     const iconUrl = core.getInput("icon-url", { required: false });
     const botName = core.getInput("bot-name", { required: false });
     const configurationPath = core.getInput("configuration-path", {
@@ -1636,13 +1640,13 @@ const getAllInputs = () => {
         repoToken,
         configurationPath,
         slackWebhookUrl,
+        githubEventName,
         iconUrl,
         botName,
         runId,
     };
 };
 exports.main = async () => {
-    var _a, _b, _c;
     const { payload } = github_1.context;
     const allInputs = getAllInputs();
     try {
@@ -1652,9 +1656,8 @@ exports.main = async () => {
             await exports.execPrReviewRequestedMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
             return;
         }
-        const message2 = `pull_requests id is <${(_a = payload.pull_requests) === null || _a === void 0 ? void 0 : _a.id}>`;
-        console.log(message2);
-        if (((_b = payload.pull_requests) === null || _b === void 0 ? void 0 : _b.id) !== null && ((_c = payload.pull_requests) === null || _c === void 0 ? void 0 : _c.id) !== void 0) {
+        console.log(allInputs.githubEventName);
+        if (allInputs.githubEventName === "pull_request") {
             await exports.execPullRequestMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
             return;
         }
