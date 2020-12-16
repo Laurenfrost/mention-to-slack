@@ -1642,17 +1642,19 @@ const getAllInputs = () => {
     };
 };
 exports.main = async () => {
+    var _a, _b, _c;
     const { payload } = github_1.context;
     const allInputs = getAllInputs();
     try {
-        const message = `<${payload.action}> is payload.action.`;
-        console.log(message);
+        const message1 = `<${payload.action}> is payload.action.`;
+        console.log(message1);
         if (payload.action === "review_requested") {
             await exports.execPrReviewRequestedMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
             return;
         }
-        console.log(payload.pull_requests);
-        if (payload.pull_requests !== null && payload.pull_requests !== void 0) {
+        const message2 = `pull_requests id is <${(_a = payload.pull_requests) === null || _a === void 0 ? void 0 : _a.id}>`;
+        console.log(message2);
+        if (((_b = payload.pull_requests) === null || _b === void 0 ? void 0 : _b.id) !== null && ((_c = payload.pull_requests) === null || _c === void 0 ? void 0 : _c.id) !== void 0) {
             await exports.execPullRequestMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
             return;
         }
