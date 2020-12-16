@@ -73,7 +73,7 @@ export const execPullRequestMention = async (
     return;
   }
 
-  const action = payload.pull_requests?.action;
+  const action = payload.action;
   const title = payload.pull_request?.title;
   const url = payload.pull_request?.html_url;
   const prSlackUserId = slackIds[0];
@@ -269,8 +269,10 @@ export const main = async (): Promise<void> => {
   const allInputs = getAllInputs();
 
   try {
-    const message1 = `<${payload.action}> is payload.action.`;
+    const message1 = `githubEventName is <${allInputs.githubEventName}>.`;
     console.log(message1);
+    const message2 = `payload.action is <${payload.action}>.`;
+    console.log(message2);
     if (payload.action === "review_requested") {
       await execPrReviewRequestedMention(
         payload,
@@ -281,7 +283,7 @@ export const main = async (): Promise<void> => {
       );
       return;
     }
-    console.log(allInputs.githubEventName);
+    
     if (allInputs.githubEventName === "pull_request") {
       await execPullRequestMention(
         payload,
@@ -292,6 +294,7 @@ export const main = async (): Promise<void> => {
       );
       return;
     }
+
     await execNormalMention(
       payload,
       allInputs,

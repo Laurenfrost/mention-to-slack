@@ -1526,7 +1526,7 @@ exports.convertToSlackUsername = async (githubUsernames, githubClient, repoToken
 };
 // In progress
 exports.execPullRequestMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d;
     const { repoToken, configurationPath } = allInputs;
     const pullRequestGithubUsername = (_b = (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
     console.log(pullRequestGithubUsername);
@@ -1537,9 +1537,9 @@ exports.execPullRequestMention = async (payload, allInputs, githubClient, slackC
     if (slackIds.length === 0) {
         return;
     }
-    const action = (_c = payload.pull_requests) === null || _c === void 0 ? void 0 : _c.action;
-    const title = (_d = payload.pull_request) === null || _d === void 0 ? void 0 : _d.title;
-    const url = (_e = payload.pull_request) === null || _e === void 0 ? void 0 : _e.html_url;
+    const action = payload.action;
+    const title = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.title;
+    const url = (_d = payload.pull_request) === null || _d === void 0 ? void 0 : _d.html_url;
     const prSlackUserId = slackIds[0];
     const message = `<@${prSlackUserId}> has <${action}> pull request <${url}|${title}>.`;
     console.log(message);
@@ -1650,13 +1650,14 @@ exports.main = async () => {
     const { payload } = github_1.context;
     const allInputs = getAllInputs();
     try {
-        const message1 = `<${payload.action}> is payload.action.`;
+        const message1 = `githubEventName is <${allInputs.githubEventName}>.`;
         console.log(message1);
+        const message2 = `payload.action is <${payload.action}>.`;
+        console.log(message2);
         if (payload.action === "review_requested") {
             await exports.execPrReviewRequestedMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
             return;
         }
-        console.log(allInputs.githubEventName);
         if (allInputs.githubEventName === "pull_request") {
             await exports.execPullRequestMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
             return;
