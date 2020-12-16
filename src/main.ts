@@ -72,33 +72,6 @@ export const execPrReviewRequestedMention = async (
     return;
   }
 
-  export const execPrCommentMention = async (
-    payload: WebhookPayload,
-    allInputs: AllInputs,
-    githubClient: typeof GithubRepositoryImpl,
-    slackClient: typeof SlackRepositoryImpl,
-    context: Pick<Context, "repo" | "sha">
-  ): Promise<void> => {
-    const { repoToken, configurationPath } = allInputs;
-    const requestedGithubUsername =
-      payload.requested_reviewer?.login || payload.requested_team?.name;
-  
-    if (!requestedGithubUsername) {
-      throw new Error("Can not find review requested user.");
-    }
-  
-    const slackIds = await convertToSlackUsername(
-      [requestedGithubUsername],
-      githubClient,
-      repoToken,
-      configurationPath,
-      context
-    );
-  
-    if (slackIds.length === 0) {
-      return;
-    }
-
   const title = payload.pull_request?.title;
   const url = payload.pull_request?.html_url;
   const requestedSlackUserId = slackIds[0];
@@ -213,17 +186,6 @@ export const main = async (): Promise<void> => {
   try {
     if (payload.action === "review_requested") {
       await execPrReviewRequestedMention(
-        payload,
-        allInputs,
-        GithubRepositoryImpl,
-        SlackRepositoryImpl,
-        context
-      );
-      return;
-    }
-
-    if (payload.action === "review_requested") {
-      await execPrCommentMention(
         payload,
         allInputs,
         GithubRepositoryImpl,
