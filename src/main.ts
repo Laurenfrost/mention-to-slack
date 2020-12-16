@@ -18,6 +18,7 @@ export type AllInputs = {
   repoToken: string;
   configurationPath: string;
   slackWebhookUrl: string;
+  githubEventName: string;
   iconUrl?: string;
   botName?: string;
   runId?: string;
@@ -240,6 +241,11 @@ const getAllInputs = (): AllInputs => {
     core.setFailed("Error! Need to set `repo-token`.");
   }
 
+  const githubEventName = core.getInput("github-event-name", { required: true})
+  if (!githubEventName) {
+    core.setFailed("Error! Need to set `github-event-name");
+  }
+
   const iconUrl = core.getInput("icon-url", { required: false });
   const botName = core.getInput("bot-name", { required: false });
   const configurationPath = core.getInput("configuration-path", {
@@ -251,6 +257,7 @@ const getAllInputs = (): AllInputs => {
     repoToken,
     configurationPath,
     slackWebhookUrl,
+    githubEventName,
     iconUrl,
     botName,
     runId,
@@ -274,9 +281,8 @@ export const main = async (): Promise<void> => {
       );
       return;
     }
-    const message2 = `pull_requests id is <${payload.pull_requests?.id}>`
-    console.log(message2);
-    if (payload.pull_requests?.id !== null && payload.pull_requests?.id !== void 0) {
+    console.log(allInputs.githubEventName);
+    if (allInputs.githubEventName === "pull_request") {
       await execPullRequestMention(
         payload,
         allInputs,
