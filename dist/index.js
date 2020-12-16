@@ -1645,13 +1645,13 @@ exports.main = async () => {
     const { payload } = github_1.context;
     const allInputs = getAllInputs();
     try {
-        const message = `<@${payload.action}> is payload.action.`;
+        const message = `<${payload.action}> is payload.action.`;
         console.log(message);
         if (payload.action === "review_requested") {
             await exports.execPrReviewRequestedMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
             return;
         }
-        if (payload.action === "pull_requests") {
+        if (payload.pull_requests !== null && payload.pull_requests !== void 0) {
             await exports.execPullRequestMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
             return;
         }
