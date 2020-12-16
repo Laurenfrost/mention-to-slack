@@ -45,6 +45,44 @@ export const convertToSlackUsername = async (
   return slackIds;
 };
 
+// In progress
+export const execPullRequestMention = async (
+  payload: WebhookPayload,
+  allInputs: AllInputs,
+  githubClient: typeof GithubRepositoryImpl,
+  slackClient: typeof SlackRepositoryImpl,
+  context: Pick<Context, "repo" | "sha">
+): Promise<void> => {
+  const { repoToken, configurationPath } = allInputs;
+  const pullRequestGithubUsername = payload.pull_request?.user?.login;
+
+  if (!pullRequestGithubUsername) {
+    throw new Error("Can not find pull requested user.");
+  }
+
+  const slackIds = await convertToSlackUsername(
+    [pullRequestGithubUsername],
+    githubClient,
+    repoToken,
+    configurationPath,
+    context
+  );
+
+  if (slackIds.length === 0) {
+    return;
+  }
+
+  const action = payload.pull_requests?.action;
+  const title = payload.pull_request?.title;
+  const url = payload.pull_request?.html_url;
+  const prSlackUserId = slackIds[0];
+
+  const message = `<@${prSlackUserId}> has <${action}> pull request <${url}|${title}>.`;
+  const { slackWebhookUrl, iconUrl, botName } = allInputs;
+
+  await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
+};
+
 export const execPrReviewRequestedMention = async (
   payload: WebhookPayload,
   allInputs: AllInputs,
@@ -78,6 +116,45 @@ export const execPrReviewRequestedMention = async (
   const requestUsername = payload.sender?.login;
 
   const message = `<@${requestedSlackUserId}> has been requested to review <${url}|${title}> by ${requestUsername}.`;
+  const { slackWebhookUrl, iconUrl, botName } = allInputs;
+
+  await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
+};
+
+// TODO: PR comment mentions
+export const execPrReviewRequestedCommentMention = async (
+  payload: WebhookPayload,
+  allInputs: AllInputs,
+  githubClient: typeof GithubRepositoryImpl,
+  slackClient: typeof SlackRepositoryImpl,
+  context: Pick<Context, "repo" | "sha">
+): Promise<void> => {
+  const { repoToken, configurationPath } = allInputs;
+  const requestedGithubUsername =
+    payload.requested_reviewer?.login || payload.requested_team?.name;
+
+  if (!requestedGithubUsername) {
+    throw new Error("Can not find review requested user.");
+  }
+
+  const slackIds = await convertToSlackUsername(
+    [requestedGithubUsername],
+    githubClient,
+    repoToken,
+    configurationPath,
+    context
+  );
+
+  if (slackIds.length === 0) {
+    return;
+  }
+
+  const action = payload.action;
+  const title = payload.pull_request?.title;
+  const url = payload.pull_request?.html_url;
+  const prSlackUserId = slackIds[0];
+
+  const message = `<@${prSlackUserId}> has <${action}> pull request <${url}|${title}>.`;
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
 
   await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
@@ -194,7 +271,16 @@ export const main = async (): Promise<void> => {
       );
       return;
     }
-
+    if (payload.action === "pull_requests") {
+      await execPullRequestMention(
+        payload,
+        allInputs,
+        GithubRepositoryImpl,
+        SlackRepositoryImpl,
+        context
+      );
+      return;
+    }
     await execNormalMention(
       payload,
       allInputs,
