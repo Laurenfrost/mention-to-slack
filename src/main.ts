@@ -55,7 +55,7 @@ export const execPullRequestMention = async (
 ): Promise<void> => {
   const { repoToken, configurationPath } = allInputs;
   const pullRequestGithubUsername = payload.pull_request?.user?.login;
-
+  console.log(pullRequestGithubUsername);
   if (!pullRequestGithubUsername) {
     throw new Error("Can not find pull requested user.");
   }
@@ -78,6 +78,7 @@ export const execPullRequestMention = async (
   const prSlackUserId = slackIds[0];
 
   const message = `<@${prSlackUserId}> has <${action}> pull request <${url}|${title}>.`;
+  console.log(message);
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
 
   await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
@@ -261,6 +262,8 @@ export const main = async (): Promise<void> => {
   const allInputs = getAllInputs();
 
   try {
+    const message = `<@${payload.action}> is payload.action.`;
+    console.log(message);
     if (payload.action === "review_requested") {
       await execPrReviewRequestedMention(
         payload,
