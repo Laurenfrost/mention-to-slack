@@ -1564,7 +1564,14 @@ exports.execPrReviewRequestedCommentMention = async (payload, allInputs, githubC
     const comment_body = (_g = payload.comment) === null || _g === void 0 ? void 0 : _g.body;
     const comment_url = (_h = payload.comment) === null || _h === void 0 ? void 0 : _h.html_url;
     const cmSlackUserId = slackIds[0];
-    const message = `<@${cmSlackUserId}> has <${action}> a comment on a <${pr_state}> pull request <${pr_title}>:\n>${comment_body}\n${comment_url}.`;
+    // show comment text as quote text.
+    const comment_lines = comment_body.split("\n");
+    var comment_as_quote = "";
+    comment_lines.forEach(line => {
+        core.warning(line);
+        comment_as_quote += (">" + line);
+    });
+    const message = `<@${cmSlackUserId}> has <${action}> a comment on a <${pr_state}> pull request <${pr_title}>:\n${comment_as_quote}\n${comment_url}.`;
     core.warning(message);
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });

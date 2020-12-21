@@ -95,7 +95,7 @@ export const execPrReviewRequestedCommentMention = async (
 ): Promise<void> => {
   const { repoToken, configurationPath } = allInputs;
   const commentGithubUsername = 
-    payload.comment?.user?.login || payload.issue?.user?.login;
+    payload.comment?.user?.login as string || payload.issue?.user?.login as string;
 
   if (!{commentGithubUsername}) {
     throw new Error("Can not find comment user.");
@@ -113,14 +113,22 @@ export const execPrReviewRequestedCommentMention = async (
     return;
   }
 
-  const action = payload.action;
-  const pr_title = payload.issue?.title;
-  const pr_state = payload.issue?.state;
-  const comment_body = payload.comment?.body;
-  const comment_url = payload.comment?.html_url;
+  const action = payload.action as string;
+  const pr_title = payload.issue?.title as string;
+  const pr_state = payload.issue?.state as string;
+  const comment_body = payload.comment?.body as string;
+  const comment_url = payload.comment?.html_url as string;
   const cmSlackUserId = slackIds[0];
 
-  const message = `<@${cmSlackUserId}> has <${action}> a comment on a <${pr_state}> pull request <${pr_title}>:\n>${comment_body}\n${comment_url}.`;
+  // show comment text as quote text.
+  const comment_lines = comment_body.split("\n")
+  var comment_as_quote = "";
+  comment_lines.forEach(line => {
+    core.warning(line)
+    comment_as_quote += (">" + line);
+  })
+
+  const message = `<@${cmSlackUserId}> has <${action}> a comment on a <${pr_state}> pull request <${pr_title}>:\n${comment_as_quote}\n${comment_url}.`;
   core.warning(message)
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
 
