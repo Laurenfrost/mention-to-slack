@@ -1695,11 +1695,14 @@ exports.main = async () => {
         }
         if (github_1.context.eventName === "issue_comment") {
             if (((_b = payload.issue) === null || _b === void 0 ? void 0 : _b.pull_request) == [null, undefined]) {
+                core.warning("This comment is on an Issue.");
                 await exports.execIssueCommentMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
             }
             else {
+                core.warning("This comment is on a pull request.");
                 await exports.execPrReviewRequestedCommentMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
             }
+            throw new Error("Can not resol this issue_comment.");
         }
         // await execNormalMention(
         //   payload,
