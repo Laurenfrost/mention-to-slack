@@ -9,11 +9,15 @@ This action sends mention to your slack account when you have been mentioned at 
 - Send mention to slack if you have been mentioned
   - pull request
 - Send notification to slack if you have been requested to review.
+- Send context to slack if you comment on a PR or Issue. 
+  *Both PR comments and Issue comments are triggered by issue_comment event.*
+  *And workflows should be at default branch to trigger issue_comment event.*
 
 ## TODO
 
 - Send mention to slack if you have been mentioned
-  - pull request comments
+  - Review
+  - Review comments
   - issue
   - more and more
 
@@ -27,6 +31,7 @@ This action sends mention to your slack account when you have been mentioned at 
 | bot-name | No | Github Mention To Slack | Display name for this bot on Slack. |
 | icon-url | No | Null | Display icon url for this bot on Slack. |
 | run-id | No | Null | Used for the link in the error message when an error occurs. |
+| debug-flag | No | false | Set true to show debug info in workflows log. |
 
 ## Example usage
 
