@@ -1648,15 +1648,20 @@ const getAllInputs = () => {
     };
 };
 exports.main = async () => {
+    var _a;
     const { payload } = github_1.context;
     const allInputs = getAllInputs();
     try {
         const message1 = `githubEventName is <${allInputs.githubEventName}>.`;
         console.log(message1);
-        const message2 = `payload.action is <${payload.name}>.`;
+        const message2 = `eventName is <${github_1.context.eventName}>.`;
         console.log(message2);
-        const message3 = `payload.action is <${payload.action}>.`;
+        const message3 = `action is <${github_1.context.action}>.`;
         console.log(message3);
+        const message4 = `actor is <${github_1.context.actor}>.`;
+        console.log(message4);
+        const message5 = `issue is <${(_a = payload.issue) === null || _a === void 0 ? void 0 : _a.pull_request}>.`;
+        console.log(message5);
         if (payload.action === "review_requested") {
             await exports.execPrReviewRequestedMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
             return;

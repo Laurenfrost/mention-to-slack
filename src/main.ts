@@ -272,11 +272,15 @@ export const main = async (): Promise<void> => {
   try {
     const message1 = `githubEventName is <${allInputs.githubEventName}>.`;
     console.log(message1);
-    const message2 = `payload.action is <${payload.name}>.`;
+    const message2 = `eventName is <${context.eventName}>.`;
     console.log(message2);
-    const message3 = `payload.action is <${payload.action}>.`;
+    const message3 = `action is <${context.action}>.`;
     console.log(message3);
-    
+    const message4 = `actor is <${context.actor}>.`;
+    console.log(message4);
+    const message5 = `issue is <${payload.issue?.pull_request}>.`;
+    console.log(message5);
+
     if (payload.action === "review_requested") {
       await execPrReviewRequestedMention(
         payload,
