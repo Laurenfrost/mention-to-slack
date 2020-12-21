@@ -1548,7 +1548,7 @@ exports.execPullRequestMention = async (payload, allInputs, githubClient, slackC
 };
 // In progress: PR comment mentions
 exports.execPrReviewRequestedCommentMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+    var _a, _b, _c, _d, _e, _f, _g, _h;
     const { repoToken, configurationPath } = allInputs;
     const commentGithubUsername = ((_b = (_a = payload.comment) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login) || ((_d = (_c = payload.issue) === null || _c === void 0 ? void 0 : _c.user) === null || _d === void 0 ? void 0 : _d.login);
     if (!{ commentGithubUsername }) {
@@ -1559,12 +1559,12 @@ exports.execPrReviewRequestedCommentMention = async (payload, allInputs, githubC
         return;
     }
     const action = payload.action;
-    const pr_title = (_f = (_e = payload.issue) === null || _e === void 0 ? void 0 : _e.issue) === null || _f === void 0 ? void 0 : _f.title;
-    const pr_state = (_h = (_g = payload.issue) === null || _g === void 0 ? void 0 : _g.issue) === null || _h === void 0 ? void 0 : _h.state;
-    const comment_body = (_j = payload.comment) === null || _j === void 0 ? void 0 : _j.body;
-    const comment_url = (_k = payload.comment) === null || _k === void 0 ? void 0 : _k.html_url;
+    const pr_title = (_e = payload.issue) === null || _e === void 0 ? void 0 : _e.title;
+    const pr_state = (_f = payload.issue) === null || _f === void 0 ? void 0 : _f.state;
+    const comment_body = (_g = payload.comment) === null || _g === void 0 ? void 0 : _g.body;
+    const comment_url = (_h = payload.comment) === null || _h === void 0 ? void 0 : _h.html_url;
     const cmSlackUserId = slackIds[0];
-    const message = `<@${cmSlackUserId}> has <${action}> a comment on a <${pr_state}> pull request <${pr_title}>: \n<\> ${comment_body}> \n ${comment_url}.`;
+    const message = `<@${cmSlackUserId}> has <${action}> a comment on a <${pr_state}> pull request <${pr_title}>:\n>${comment_body}\n${comment_url}.`;
     core.warning(message);
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
@@ -1697,12 +1697,14 @@ exports.main = async () => {
             if (((_b = payload.issue) === null || _b === void 0 ? void 0 : _b.pull_request) == [null, undefined]) {
                 core.warning("This comment is on an Issue.");
                 await exports.execIssueCommentMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
+                return;
             }
             else {
                 core.warning("This comment is on a pull request.");
                 await exports.execPrReviewRequestedCommentMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
+                return;
             }
-            throw new Error("Can not resol this issue_comment.");
+            throw new Error("Can not resolve this issue_comment.");
         }
         // await execNormalMention(
         //   payload,
