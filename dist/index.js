@@ -1548,21 +1548,21 @@ exports.execPullRequestMention = async (payload, allInputs, githubClient, slackC
 };
 // In progress: PR comment mentions
 exports.execPrReviewRequestedCommentMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e, _f, _g;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     const { repoToken, configurationPath } = allInputs;
-    const requestedGithubUsername = (_a = payload.comment) === null || _a === void 0 ? void 0 : _a.login;
-    if (!requestedGithubUsername) {
-        throw new Error("Can not find review requested user.");
+    const commentGithubUsername = ((_b = (_a = payload.comment) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login) || ((_d = (_c = payload.issue) === null || _c === void 0 ? void 0 : _c.user) === null || _d === void 0 ? void 0 : _d.login);
+    if (!{ commentGithubUsername }) {
+        throw new Error("Can not find comment user.");
     }
-    const slackIds = await exports.convertToSlackUsername([requestedGithubUsername], githubClient, repoToken, configurationPath, context);
+    const slackIds = await exports.convertToSlackUsername([commentGithubUsername], githubClient, repoToken, configurationPath, context);
     if (slackIds.length === 0) {
         return;
     }
     const action = payload.action;
-    const pr_title = (_c = (_b = payload.issue) === null || _b === void 0 ? void 0 : _b.pull_request) === null || _c === void 0 ? void 0 : _c.title;
-    const pr_state = (_e = (_d = payload.issue) === null || _d === void 0 ? void 0 : _d.pull_request) === null || _e === void 0 ? void 0 : _e.state;
-    const comment_body = (_f = payload.comment) === null || _f === void 0 ? void 0 : _f.body;
-    const comment_url = (_g = payload.comment) === null || _g === void 0 ? void 0 : _g.html_url;
+    const pr_title = (_f = (_e = payload.issue) === null || _e === void 0 ? void 0 : _e.issue) === null || _f === void 0 ? void 0 : _f.title;
+    const pr_state = (_h = (_g = payload.issue) === null || _g === void 0 ? void 0 : _g.issue) === null || _h === void 0 ? void 0 : _h.state;
+    const comment_body = (_j = payload.comment) === null || _j === void 0 ? void 0 : _j.body;
+    const comment_url = (_k = payload.comment) === null || _k === void 0 ? void 0 : _k.html_url;
     const cmSlackUserId = slackIds[0];
     const message = `<@${cmSlackUserId}> has <${action}> a comment on a <${pr_state}> pull request <${pr_title}>: \n<\> ${comment_body}> \n ${comment_url}.`;
     core.warning(message);

@@ -94,15 +94,15 @@ export const execPrReviewRequestedCommentMention = async (
   context: Pick<Context, "repo" | "sha">
 ): Promise<void> => {
   const { repoToken, configurationPath } = allInputs;
-  const requestedGithubUsername =
-    payload.comment?.login;
+  const commentGithubUsername = 
+    payload.comment?.user?.login || payload.issue?.user?.login;
 
-  if (!requestedGithubUsername) {
-    throw new Error("Can not find review requested user.");
+  if (!{commentGithubUsername}) {
+    throw new Error("Can not find comment user.");
   }
 
   const slackIds = await convertToSlackUsername(
-    [requestedGithubUsername],
+    [commentGithubUsername],
     githubClient,
     repoToken,
     configurationPath,
@@ -114,8 +114,8 @@ export const execPrReviewRequestedCommentMention = async (
   }
 
   const action = payload.action;
-  const pr_title = payload.issue?.pull_request?.title;
-  const pr_state = payload.issue?.pull_request?.state;
+  const pr_title = payload.issue?.issue?.title;
+  const pr_state = payload.issue?.issue?.state;
   const comment_body = payload.comment?.body;
   const comment_url = payload.comment?.html_url;
   const cmSlackUserId = slackIds[0];
