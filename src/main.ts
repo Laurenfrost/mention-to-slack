@@ -85,7 +85,7 @@ export const execPullRequestMention = async (
   await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
 };
 
-// TODO: PR comment mentions
+// In progress: PR comment mentions
 export const execPrReviewRequestedCommentMention = async (
   payload: WebhookPayload,
   allInputs: AllInputs,
@@ -95,7 +95,7 @@ export const execPrReviewRequestedCommentMention = async (
 ): Promise<void> => {
   const { repoToken, configurationPath } = allInputs;
   const requestedGithubUsername =
-    payload.requested_reviewer?.login || payload.requested_team?.name;
+    payload.comment?.login;
 
   if (!requestedGithubUsername) {
     throw new Error("Can not find review requested user.");
@@ -114,11 +114,14 @@ export const execPrReviewRequestedCommentMention = async (
   }
 
   const action = payload.action;
-  const title = payload.pull_request?.title;
-  const url = payload.pull_request?.html_url;
-  const prSlackUserId = slackIds[0];
+  const pr_title = payload.issue?.pull_request?.title;
+  const pr_state = payload.issue?.pull_request?.state;
+  const comment_body = payload.comment?.body;
+  const comment_url = payload.comment?.html_url;
+  const cmSlackUserId = slackIds[0];
 
-  const message = `<@${prSlackUserId}> has <${action}> pull request <${url}|${title}>.`;
+  const message = `<@${cmSlackUserId}> has <${action}> a comment on a <${pr_state}> pull request <${pr_title}>: \n<\> ${comment_body}> \n ${comment_url}.`;
+  core.warning(message)
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
 
   await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
@@ -158,6 +161,45 @@ export const execPrReviewRequestedMention = async (
   const requestUsername = payload.sender?.login;
 
   const message = `<@${requestedSlackUserId}> has been requested to review <${url}|${title}> by ${requestUsername}.`;
+  const { slackWebhookUrl, iconUrl, botName } = allInputs;
+
+  await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
+};
+
+// TODO: Issue comment mentions
+export const execIssueCommentMention = async (
+  payload: WebhookPayload,
+  allInputs: AllInputs,
+  githubClient: typeof GithubRepositoryImpl,
+  slackClient: typeof SlackRepositoryImpl,
+  context: Pick<Context, "repo" | "sha">
+): Promise<void> => {
+  const { repoToken, configurationPath } = allInputs;
+  const requestedGithubUsername =
+    payload.requested_reviewer?.login || payload.requested_team?.name;
+
+  if (!requestedGithubUsername) {
+    throw new Error("Can not find review requested user.");
+  }
+
+  const slackIds = await convertToSlackUsername(
+    [requestedGithubUsername],
+    githubClient,
+    repoToken,
+    configurationPath,
+    context
+  );
+
+  if (slackIds.length === 0) {
+    return;
+  }
+
+  const action = payload.action;
+  const title = payload.pull_request?.title;
+  const url = payload.pull_request?.html_url;
+  const prSlackUserId = slackIds[0];
+
+  const message = `<@${prSlackUserId}> has <${action}> pull request <${url}|${title}>.`;
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
 
   await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
@@ -292,7 +334,7 @@ export const main = async (): Promise<void> => {
       return;
     }
     
-    if (allInputs.githubEventName === "pull_request") {
+    if (context.eventName === "pull_request") {
       await execPullRequestMention(
         payload,
         allInputs,
@@ -301,6 +343,27 @@ export const main = async (): Promise<void> => {
         context
       );
       return;
+    }
+
+    if (context.eventName === "issue_comment") {
+      if (payload.issue?.pull_request == [null,undefined]) {
+        await execIssueCommentMention(
+          payload,
+          allInputs,
+          GithubRepositoryImpl,
+          SlackRepositoryImpl,
+          context
+        )
+      }
+      else {
+        await execPrReviewRequestedCommentMention(
+          payload,
+          allInputs,
+          GithubRepositoryImpl,
+          SlackRepositoryImpl,
+          context
+        )
+      }
     }
 
     // await execNormalMention(

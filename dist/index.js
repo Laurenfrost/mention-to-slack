@@ -1512,7 +1512,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.main = exports.execPostError = exports.execNormalMention = exports.execPrReviewRequestedMention = exports.execPrReviewRequestedCommentMention = exports.execPullRequestMention = exports.convertToSlackUsername = void 0;
+exports.main = exports.execPostError = exports.execNormalMention = exports.execIssueCommentMention = exports.execPrReviewRequestedMention = exports.execPrReviewRequestedCommentMention = exports.execPullRequestMention = exports.convertToSlackUsername = void 0;
 const core = __importStar(__webpack_require__(470));
 const github_1 = __webpack_require__(469);
 const github_2 = __webpack_require__(559);
@@ -1546,11 +1546,11 @@ exports.execPullRequestMention = async (payload, allInputs, githubClient, slackC
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
 };
-// TODO: PR comment mentions
+// In progress: PR comment mentions
 exports.execPrReviewRequestedCommentMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e, _f, _g;
     const { repoToken, configurationPath } = allInputs;
-    const requestedGithubUsername = ((_a = payload.requested_reviewer) === null || _a === void 0 ? void 0 : _a.login) || ((_b = payload.requested_team) === null || _b === void 0 ? void 0 : _b.name);
+    const requestedGithubUsername = (_a = payload.comment) === null || _a === void 0 ? void 0 : _a.login;
     if (!requestedGithubUsername) {
         throw new Error("Can not find review requested user.");
     }
@@ -1559,10 +1559,13 @@ exports.execPrReviewRequestedCommentMention = async (payload, allInputs, githubC
         return;
     }
     const action = payload.action;
-    const title = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.title;
-    const url = (_d = payload.pull_request) === null || _d === void 0 ? void 0 : _d.html_url;
-    const prSlackUserId = slackIds[0];
-    const message = `<@${prSlackUserId}> has <${action}> pull request <${url}|${title}>.`;
+    const pr_title = (_c = (_b = payload.issue) === null || _b === void 0 ? void 0 : _b.pull_request) === null || _c === void 0 ? void 0 : _c.title;
+    const pr_state = (_e = (_d = payload.issue) === null || _d === void 0 ? void 0 : _d.pull_request) === null || _e === void 0 ? void 0 : _e.state;
+    const comment_body = (_f = payload.comment) === null || _f === void 0 ? void 0 : _f.body;
+    const comment_url = (_g = payload.comment) === null || _g === void 0 ? void 0 : _g.html_url;
+    const cmSlackUserId = slackIds[0];
+    const message = `<@${cmSlackUserId}> has <${action}> a comment on a <${pr_state}> pull request <${pr_title}>: \n<\> ${comment_body}> \n ${comment_url}.`;
+    core.warning(message);
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
 };
@@ -1583,6 +1586,26 @@ exports.execPrReviewRequestedMention = async (payload, allInputs, githubClient, 
     const requestedSlackUserId = slackIds[0];
     const requestUsername = (_e = payload.sender) === null || _e === void 0 ? void 0 : _e.login;
     const message = `<@${requestedSlackUserId}> has been requested to review <${url}|${title}> by ${requestUsername}.`;
+    const { slackWebhookUrl, iconUrl, botName } = allInputs;
+    await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
+};
+// TODO: Issue comment mentions
+exports.execIssueCommentMention = async (payload, allInputs, githubClient, slackClient, context) => {
+    var _a, _b, _c, _d;
+    const { repoToken, configurationPath } = allInputs;
+    const requestedGithubUsername = ((_a = payload.requested_reviewer) === null || _a === void 0 ? void 0 : _a.login) || ((_b = payload.requested_team) === null || _b === void 0 ? void 0 : _b.name);
+    if (!requestedGithubUsername) {
+        throw new Error("Can not find review requested user.");
+    }
+    const slackIds = await exports.convertToSlackUsername([requestedGithubUsername], githubClient, repoToken, configurationPath, context);
+    if (slackIds.length === 0) {
+        return;
+    }
+    const action = payload.action;
+    const title = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.title;
+    const url = (_d = payload.pull_request) === null || _d === void 0 ? void 0 : _d.html_url;
+    const prSlackUserId = slackIds[0];
+    const message = `<@${prSlackUserId}> has <${action}> pull request <${url}|${title}>.`;
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
 };
@@ -1648,7 +1671,7 @@ const getAllInputs = () => {
     };
 };
 exports.main = async () => {
-    var _a;
+    var _a, _b;
     const { payload } = github_1.context;
     const allInputs = getAllInputs();
     try {
@@ -1666,9 +1689,17 @@ exports.main = async () => {
             await exports.execPrReviewRequestedMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
             return;
         }
-        if (allInputs.githubEventName === "pull_request") {
+        if (github_1.context.eventName === "pull_request") {
             await exports.execPullRequestMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
             return;
+        }
+        if (github_1.context.eventName === "issue_comment") {
+            if (((_b = payload.issue) === null || _b === void 0 ? void 0 : _b.pull_request) == [null, undefined]) {
+                await exports.execIssueCommentMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
+            }
+            else {
+                await exports.execPrReviewRequestedCommentMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
+            }
         }
         // await execNormalMention(
         //   payload,
