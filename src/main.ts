@@ -46,7 +46,7 @@ export const convertToSlackUsername = async (
   return slackIds;
 };
 
-// In progress
+// Pull Request
 export const execPullRequestMention = async (
   payload: WebhookPayload,
   allInputs: AllInputs,
@@ -80,44 +80,6 @@ export const execPullRequestMention = async (
 
   const message = `<@${prSlackUserId}> has <${action}> pull request <${url}|${title}>.`;
   console.log(message);
-  const { slackWebhookUrl, iconUrl, botName } = allInputs;
-
-  await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
-};
-
-export const execPrReviewRequestedMention = async (
-  payload: WebhookPayload,
-  allInputs: AllInputs,
-  githubClient: typeof GithubRepositoryImpl,
-  slackClient: typeof SlackRepositoryImpl,
-  context: Pick<Context, "repo" | "sha">
-): Promise<void> => {
-  const { repoToken, configurationPath } = allInputs;
-  const requestedGithubUsername =
-    payload.requested_reviewer?.login || payload.requested_team?.name;
-
-  if (!requestedGithubUsername) {
-    throw new Error("Can not find review requested user.");
-  }
-
-  const slackIds = await convertToSlackUsername(
-    [requestedGithubUsername],
-    githubClient,
-    repoToken,
-    configurationPath,
-    context
-  );
-
-  if (slackIds.length === 0) {
-    return;
-  }
-
-  const title = payload.pull_request?.title;
-  const url = payload.pull_request?.html_url;
-  const requestedSlackUserId = slackIds[0];
-  const requestUsername = payload.sender?.login;
-
-  const message = `<@${requestedSlackUserId}> has been requested to review <${url}|${title}> by ${requestUsername}.`;
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
 
   await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
@@ -157,6 +119,45 @@ export const execPrReviewRequestedCommentMention = async (
   const prSlackUserId = slackIds[0];
 
   const message = `<@${prSlackUserId}> has <${action}> pull request <${url}|${title}>.`;
+  const { slackWebhookUrl, iconUrl, botName } = allInputs;
+
+  await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
+};
+
+// Review Requested
+export const execPrReviewRequestedMention = async (
+  payload: WebhookPayload,
+  allInputs: AllInputs,
+  githubClient: typeof GithubRepositoryImpl,
+  slackClient: typeof SlackRepositoryImpl,
+  context: Pick<Context, "repo" | "sha">
+): Promise<void> => {
+  const { repoToken, configurationPath } = allInputs;
+  const requestedGithubUsername =
+    payload.requested_reviewer?.login || payload.requested_team?.name;
+
+  if (!requestedGithubUsername) {
+    throw new Error("Can not find review requested user.");
+  }
+
+  const slackIds = await convertToSlackUsername(
+    [requestedGithubUsername],
+    githubClient,
+    repoToken,
+    configurationPath,
+    context
+  );
+
+  if (slackIds.length === 0) {
+    return;
+  }
+
+  const title = payload.pull_request?.title;
+  const url = payload.pull_request?.html_url;
+  const requestedSlackUserId = slackIds[0];
+  const requestUsername = payload.sender?.login;
+
+  const message = `<@${requestedSlackUserId}> has been requested to review <${url}|${title}> by ${requestUsername}.`;
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
 
   await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
@@ -271,8 +272,11 @@ export const main = async (): Promise<void> => {
   try {
     const message1 = `githubEventName is <${allInputs.githubEventName}>.`;
     console.log(message1);
-    const message2 = `payload.action is <${payload.action}>.`;
+    const message2 = `payload.action is <${payload.name}>.`;
     console.log(message2);
+    const message3 = `payload.action is <${payload.action}>.`;
+    console.log(message3);
+    
     if (payload.action === "review_requested") {
       await execPrReviewRequestedMention(
         payload,
@@ -295,13 +299,14 @@ export const main = async (): Promise<void> => {
       return;
     }
 
-    await execNormalMention(
-      payload,
-      allInputs,
-      GithubRepositoryImpl,
-      SlackRepositoryImpl,
-      context
-    );
+    // await execNormalMention(
+    //   payload,
+    //   allInputs,
+    //   GithubRepositoryImpl,
+    //   SlackRepositoryImpl,
+    //   context
+    // );
+    throw new Error("Unexpected event.");
   } catch (error) {
     await execPostError(error, allInputs, SlackRepositoryImpl);
     core.warning(JSON.stringify({ payload }));
