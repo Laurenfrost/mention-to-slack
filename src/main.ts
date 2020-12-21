@@ -347,6 +347,7 @@ export const main = async (): Promise<void> => {
 
     if (context.eventName === "issue_comment") {
       if (payload.issue?.pull_request == [null,undefined]) {
+        core.warning("This comment is on an Issue.")
         await execIssueCommentMention(
           payload,
           allInputs,
@@ -356,6 +357,7 @@ export const main = async (): Promise<void> => {
         )
       }
       else {
+        core.warning("This comment is on a pull request.")
         await execPrReviewRequestedCommentMention(
           payload,
           allInputs,
@@ -364,6 +366,7 @@ export const main = async (): Promise<void> => {
           context
         )
       }
+      throw new Error("Can not resol this issue_comment.")
     }
 
     // await execNormalMention(
