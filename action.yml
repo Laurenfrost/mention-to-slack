@@ -8,9 +8,10 @@ inputs:
   slack-webhook-url:
     description: "Slack Incomming Webhook URL to notify."
     required: true
-  github-event-name:
-    description: "Event name that triggered the actions."
-    required: true
+  debug-flag:
+    description: "debug flag, set true to show debug info."
+    required: false
+    default: "false"
   repo-token:
     description: "Github access token to fetch .github/mention-to-slack.yml file."
     required: true
