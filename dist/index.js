@@ -1546,15 +1546,19 @@ exports.execPullRequestMention = async (payload, allInputs, githubClient, slackC
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
 };
-// In progress: PR comment mentions
+// PR comment mentions
 exports.execPrReviewRequestedCommentMention = async (payload, allInputs, githubClient, slackClient, context) => {
     var _a, _b, _c, _d, _e, _f, _g, _h;
     const { repoToken, configurationPath } = allInputs;
-    const commentGithubUsername = ((_b = (_a = payload.comment) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login) || ((_d = (_c = payload.issue) === null || _c === void 0 ? void 0 : _c.user) === null || _d === void 0 ? void 0 : _d.login);
-    if (!{ commentGithubUsername }) {
+    const commentGithubUsername = (_b = (_a = payload.comment) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
+    const pullRequestedGithubUsername = (_d = (_c = payload.issue) === null || _c === void 0 ? void 0 : _c.user) === null || _d === void 0 ? void 0 : _d.login;
+    if (!commentGithubUsername) {
         throw new Error("Can not find comment user.");
     }
-    const slackIds = await exports.convertToSlackUsername([commentGithubUsername], githubClient, repoToken, configurationPath, context);
+    if (!pullRequestedGithubUsername) {
+        throw new Error("Can not find pull request user.");
+    }
+    const slackIds = await exports.convertToSlackUsername([commentGithubUsername, pullRequestedGithubUsername], githubClient, repoToken, configurationPath, context);
     if (slackIds.length === 0) {
         return;
     }
@@ -1563,7 +1567,8 @@ exports.execPrReviewRequestedCommentMention = async (payload, allInputs, githubC
     const pr_state = (_f = payload.issue) === null || _f === void 0 ? void 0 : _f.state;
     const comment_body = (_g = payload.comment) === null || _g === void 0 ? void 0 : _g.body;
     const comment_url = (_h = payload.comment) === null || _h === void 0 ? void 0 : _h.html_url;
-    const cmSlackUserId = slackIds[0];
+    const commentSlackUserId = slackIds[0];
+    const pullRequestedSlackUserId = slackIds[1];
     // show comment text as quote text.
     const comment_lines = comment_body.split("\n");
     var comment_as_quote = "";
@@ -1571,7 +1576,7 @@ exports.execPrReviewRequestedCommentMention = async (payload, allInputs, githubC
         core.warning(line);
         comment_as_quote += (">" + line);
     });
-    const message = `<@${cmSlackUserId}> has <${action}> a comment on a <${pr_state}> pull request <${pr_title}>:\n${comment_as_quote}\n${comment_url}.`;
+    const message = `<@${commentSlackUserId}> has <${action}> a comment on a <${pr_state}> pull request <@${pullRequestedSlackUserId}> <${pr_title}>:\n${comment_as_quote}\n${comment_url}.`;
     core.warning(message);
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
@@ -1596,23 +1601,38 @@ exports.execPrReviewRequestedMention = async (payload, allInputs, githubClient, 
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
 };
-// TODO: Issue comment mentions
+// In progress: Issue comment mentions
 exports.execIssueCommentMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e, _f, _g, _h;
     const { repoToken, configurationPath } = allInputs;
-    const requestedGithubUsername = ((_a = payload.requested_reviewer) === null || _a === void 0 ? void 0 : _a.login) || ((_b = payload.requested_team) === null || _b === void 0 ? void 0 : _b.name);
-    if (!requestedGithubUsername) {
-        throw new Error("Can not find review requested user.");
+    const commentGithubUsername = (_b = (_a = payload.comment) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
+    const issueGithubUsername = (_d = (_c = payload.issue) === null || _c === void 0 ? void 0 : _c.user) === null || _d === void 0 ? void 0 : _d.login;
+    if (!{ commentGithubUsername }) {
+        throw new Error("Can not find comment user.");
     }
-    const slackIds = await exports.convertToSlackUsername([requestedGithubUsername], githubClient, repoToken, configurationPath, context);
+    if (!{ issueGithubUsername }) {
+        throw new Error("Can not find issue user.");
+    }
+    const slackIds = await exports.convertToSlackUsername([commentGithubUsername, issueGithubUsername], githubClient, repoToken, configurationPath, context);
     if (slackIds.length === 0) {
         return;
     }
     const action = payload.action;
-    const title = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.title;
-    const url = (_d = payload.pull_request) === null || _d === void 0 ? void 0 : _d.html_url;
-    const prSlackUserId = slackIds[0];
-    const message = `<@${prSlackUserId}> has <${action}> pull request <${url}|${title}>.`;
+    const issue_title = (_e = payload.issue) === null || _e === void 0 ? void 0 : _e.title;
+    const issue_state = (_f = payload.issue) === null || _f === void 0 ? void 0 : _f.state;
+    const comment_body = (_g = payload.comment) === null || _g === void 0 ? void 0 : _g.body;
+    const comment_url = (_h = payload.comment) === null || _h === void 0 ? void 0 : _h.html_url;
+    const commentSlackUserId = slackIds[0];
+    const issueSlackUserId = slackIds[1];
+    // show comment text as quote text.
+    const comment_lines = comment_body.split("\n");
+    var comment_as_quote = "";
+    comment_lines.forEach(line => {
+        core.warning(line);
+        comment_as_quote += (">" + line);
+    });
+    const message = `<@${commentSlackUserId}> has <${action}> a comment on a <${issue_state}> issue <@${issueSlackUserId}> <${issue_title}>:\n${comment_as_quote}\n${comment_url}.`;
+    core.warning(message);
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
 };
