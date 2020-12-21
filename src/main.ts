@@ -114,13 +114,13 @@ export const execPrReviewRequestedCommentMention = async (
   }
 
   const action = payload.action;
-  const pr_title = payload.issue?.issue?.title;
-  const pr_state = payload.issue?.issue?.state;
+  const pr_title = payload.issue?.title;
+  const pr_state = payload.issue?.state;
   const comment_body = payload.comment?.body;
   const comment_url = payload.comment?.html_url;
   const cmSlackUserId = slackIds[0];
 
-  const message = `<@${cmSlackUserId}> has <${action}> a comment on a <${pr_state}> pull request <${pr_title}>: \n<\> ${comment_body}> \n ${comment_url}.`;
+  const message = `<@${cmSlackUserId}> has <${action}> a comment on a <${pr_state}> pull request <${pr_title}>:\n>${comment_body}\n${comment_url}.`;
   core.warning(message)
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
 
@@ -354,7 +354,8 @@ export const main = async (): Promise<void> => {
           GithubRepositoryImpl,
           SlackRepositoryImpl,
           context
-        )
+        );
+        return;
       }
       else {
         core.warning("This comment is on a pull request.")
@@ -364,9 +365,10 @@ export const main = async (): Promise<void> => {
           GithubRepositoryImpl,
           SlackRepositoryImpl,
           context
-        )
+        );
+        return;
       }
-      throw new Error("Can not resol this issue_comment.")
+      throw new Error("Can not resolve this issue_comment.")
     }
 
     // await execNormalMention(
