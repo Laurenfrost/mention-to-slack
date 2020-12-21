@@ -24,7 +24,6 @@ This action sends mention to your slack account when you have been mentioned at 
 | configuration-path | Yes | .github/mention-to-slack.yml | Mapping config for Github username to Slack member ID. |
 | slack-webhook-url | Yes | Null | Slack Incomming Webhook URL to notify. |
 | repo-token | Yes | Null | Github access token to fetch .github/mention-to-slack.yml file. |
-| github-event-name | Yes | Null | Event name that triggered the actions. |
 | bot-name | No | Github Mention To Slack | Display name for this bot on Slack. |
 | icon-url | No | Null | Display icon url for this bot on Slack. |
 | run-id | No | Null | Used for the link in the error message when an error occurs. |
@@ -58,10 +57,10 @@ jobs:
           configuration-path: .github/mention-to-slack.yml
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          github-event-name: ${{ github.event_name }}
           icon-url: https://github.githubassets.com/images/modules/logos_page/Octocat.png
           bot-name: ${{github.repository}}
           run-id: ${{ github.run_id }}
+          debug-flag: false
 ```
 
 .github/mention-to-slack.yml

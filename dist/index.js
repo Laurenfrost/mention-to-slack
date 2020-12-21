@@ -1512,7 +1512,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.main = exports.execPostError = exports.execNormalMention = exports.execIssueCommentMention = exports.execPrReviewRequestedMention = exports.execPrReviewRequestedCommentMention = exports.execPullRequestMention = exports.convertToSlackUsername = void 0;
+exports.main = exports.execPostError = exports.execNormalMention = exports.execIssueCommentMention = exports.execIssueMention = exports.execPrReviewRequestedMention = exports.execPrReviewRequestedCommentMention = exports.execPullRequestMention = exports.convertToSlackUsername = void 0;
 const core = __importStar(__webpack_require__(470));
 const github_1 = __webpack_require__(469);
 const github_2 = __webpack_require__(559);
@@ -1601,7 +1601,42 @@ exports.execPrReviewRequestedMention = async (payload, allInputs, githubClient, 
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
 };
-// In progress: Issue comment mentions
+// In progress: Issue metion
+exports.execIssueMention = async (payload, allInputs, githubClient, slackClient, context) => {
+    var _a, _b, _c, _d, _e, _f, _g, _h;
+    const { repoToken, configurationPath } = allInputs;
+    const commentGithubUsername = (_b = (_a = payload.comment) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
+    const issueGithubUsername = (_d = (_c = payload.issue) === null || _c === void 0 ? void 0 : _c.user) === null || _d === void 0 ? void 0 : _d.login;
+    if (!{ commentGithubUsername }) {
+        throw new Error("Can not find comment user.");
+    }
+    if (!{ issueGithubUsername }) {
+        throw new Error("Can not find issue user.");
+    }
+    const slackIds = await exports.convertToSlackUsername([commentGithubUsername, issueGithubUsername], githubClient, repoToken, configurationPath, context);
+    if (slackIds.length === 0) {
+        return;
+    }
+    const action = payload.action;
+    const issue_title = (_e = payload.issue) === null || _e === void 0 ? void 0 : _e.title;
+    const issue_state = (_f = payload.issue) === null || _f === void 0 ? void 0 : _f.state;
+    const comment_body = (_g = payload.comment) === null || _g === void 0 ? void 0 : _g.body;
+    const comment_url = (_h = payload.comment) === null || _h === void 0 ? void 0 : _h.html_url;
+    const commentSlackUserId = slackIds[0];
+    const issueSlackUserId = slackIds[1];
+    // show comment text as quote text.
+    const comment_lines = comment_body.split("\n");
+    var comment_as_quote = "";
+    comment_lines.forEach(line => {
+        core.warning(line);
+        comment_as_quote += (">" + line);
+    });
+    const message = `<@${commentSlackUserId}> has <${action}> a comment on a <${issue_state}> issue <@${issueSlackUserId}> <${issue_title}>:\n${comment_as_quote}\n${comment_url}.`;
+    core.warning(message);
+    const { slackWebhookUrl, iconUrl, botName } = allInputs;
+    await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
+};
+// Issue comment mentions
 exports.execIssueCommentMention = async (payload, allInputs, githubClient, slackClient, context) => {
     var _a, _b, _c, _d, _e, _f, _g, _h;
     const { repoToken, configurationPath } = allInputs;
@@ -1677,9 +1712,18 @@ const getAllInputs = () => {
     if (!repoToken) {
         core.setFailed("Error! Need to set `repo-token`.");
     }
-    const githubEventName = core.getInput("github-event-name", { required: true });
-    if (!githubEventName) {
-        core.setFailed("Error! Need to set `github-event-name");
+    const debugFlagString = core.getInput("github-debug-flag-name", { required: false });
+    var debugFlag = false;
+    if (!debugFlagString) {
+        core.warning("Set debugFlag as false by default.");
+        debugFlag = false;
+    }
+    else if (debugFlagString === "true") {
+        core.warning("Set debugFlag as true.");
+        debugFlag = true;
+    }
+    else {
+        core.setFailed("Unknown input. You should set true or false for a debug flag.");
     }
     const iconUrl = core.getInput("icon-url", { required: false });
     const botName = core.getInput("bot-name", { required: false });
@@ -1691,7 +1735,7 @@ const getAllInputs = () => {
         repoToken,
         configurationPath,
         slackWebhookUrl,
-        githubEventName,
+        debugFlag,
         iconUrl,
         botName,
         runId,
@@ -1702,36 +1746,46 @@ exports.main = async () => {
     const { payload } = github_1.context;
     const allInputs = getAllInputs();
     try {
-        const message1 = `githubEventName is <${allInputs.githubEventName}>.`;
-        console.log(message1);
-        const message2 = `eventName is <${github_1.context.eventName}>.`;
-        console.log(message2);
-        const message3 = `action is <${github_1.context.action}>.`;
-        console.log(message3);
-        const message4 = `actor is <${github_1.context.actor}>.`;
-        console.log(message4);
-        const message5 = `issue is <${(_a = payload.issue) === null || _a === void 0 ? void 0 : _a.pull_request}>.`;
-        console.log(message5);
+        if (allInputs.debugFlag) {
+            const message2 = `eventName is <${github_1.context.eventName}>.`;
+            console.log(message2);
+            const message3 = `action is <${github_1.context.action}>.`;
+            console.log(message3);
+            const message4 = `actor is <${github_1.context.actor}>.`;
+            console.log(message4);
+            const message5 = `issue is <${(_a = payload.issue) === null || _a === void 0 ? void 0 : _a.pull_request}>.`;
+            console.log(message5);
+        }
         if (payload.action === "review_requested") {
+            if (allInputs.debugFlag)
+                core.warning("This action is a review requested.");
             await exports.execPrReviewRequestedMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
             return;
         }
         if (github_1.context.eventName === "pull_request") {
+            if (allInputs.debugFlag)
+                core.warning("This action is a pull request.");
             await exports.execPullRequestMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
             return;
         }
         if (github_1.context.eventName === "issue_comment") {
             if (((_b = payload.issue) === null || _b === void 0 ? void 0 : _b.pull_request) == [null, undefined]) {
-                core.warning("This comment is on an Issue.");
+                if (allInputs.debugFlag)
+                    core.warning("This comment is on an Issue.");
                 await exports.execIssueCommentMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
                 return;
             }
             else {
-                core.warning("This comment is on a pull request.");
+                if (allInputs.debugFlag)
+                    core.warning("This comment is on a pull request.");
                 await exports.execPrReviewRequestedCommentMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
                 return;
             }
-            throw new Error("Can not resolve this issue_comment.");
+            // throw new Error("Can not resolve this issue_comment.")
+        }
+        if (github_1.context.eventName === "issue") {
+            await exports.execIssueMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
+            return;
         }
         // await execNormalMention(
         //   payload,
