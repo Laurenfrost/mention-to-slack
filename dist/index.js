@@ -1769,7 +1769,7 @@ exports.main = async () => {
             return;
         }
         if (github_1.context.eventName === "issue_comment") {
-            if (((_b = payload.issue) === null || _b === void 0 ? void 0 : _b.pull_request) == [null, undefined]) {
+            if (((_b = payload.issue) === null || _b === void 0 ? void 0 : _b.pull_request) == undefined) {
                 if (allInputs.debugFlag)
                     core.warning("This comment is on an Issue.");
                 await exports.execIssueCommentMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
