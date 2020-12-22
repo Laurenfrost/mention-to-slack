@@ -1712,7 +1712,7 @@ const getAllInputs = () => {
     if (!repoToken) {
         core.setFailed("Error! Need to set `repo-token`.");
     }
-    const debugFlagString = core.getInput("github-debug-flag-name", { required: false });
+    const debugFlagString = core.getInput("debug-flag", { required: false });
     var debugFlag = false;
     if (!debugFlagString) {
         core.warning("Set debugFlag as false by default.");
