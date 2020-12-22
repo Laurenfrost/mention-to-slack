@@ -437,7 +437,7 @@ export const main = async (): Promise<void> => {
     }
 
     if (context.eventName === "issue_comment") {
-      if (payload.issue?.pull_request == [null,undefined]) {
+      if (payload.issue?.pull_request == undefined) {
         if (allInputs.debugFlag) core.warning("This comment is on an Issue.")
         await execIssueCommentMention(
           payload,
