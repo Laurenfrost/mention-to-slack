@@ -1619,7 +1619,9 @@ exports.execIssueMention = async (payload, allInputs, githubClient, slackClient,
     const issue_body = (_d = payload.issue) === null || _d === void 0 ? void 0 : _d.body;
     const issue_url = (_e = payload.issue) === null || _e === void 0 ? void 0 : _e.html_url;
     const issueSlackUserId = slackIds[0];
-    const message = `<@${issueSlackUserId}> has <${action}> a issue <${issue_title}>:\n${issue_body}\n${issue_url}.`;
+    const message = action === "opened" ?
+        `<@${issueSlackUserId}> has <${action}> a issue <${issue_title}>:\n${issue_body}\n${issue_url}.` :
+        `<@${issueSlackUserId}> has <${action}> a issue <${issue_title}>:\n${issue_url}.`;
     core.warning(message);
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
