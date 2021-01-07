@@ -449,7 +449,7 @@ export const main = async (): Promise<void> => {
       // throw new Error("Can not resolve this issue_comment.")
     }
 
-    if (context.eventName === "issue") {
+    if (context.eventName === "issues") {
       await execIssueMention(
         payload,
         allInputs,

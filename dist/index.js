@@ -1771,7 +1771,7 @@ exports.main = async () => {
             }
             // throw new Error("Can not resolve this issue_comment.")
         }
-        if (github_1.context.eventName === "issue") {
+        if (github_1.context.eventName === "issues") {
             await exports.execIssueMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
             return;
         }
