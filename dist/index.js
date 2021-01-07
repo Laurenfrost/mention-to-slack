@@ -1712,6 +1712,10 @@ const getAllInputs = () => {
         core.warning("Set debugFlag as true.");
         debugFlag = true;
     }
+    else if (debugFlagString === "false") {
+        core.warning("Set debugFlag as false.");
+        debugFlag = false;
+    }
     else {
         core.setFailed("Unknown input. You should set true or false for a debug flag.");
     }
