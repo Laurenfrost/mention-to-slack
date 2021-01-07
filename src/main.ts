@@ -78,7 +78,7 @@ export const execPullRequestMention = async (
   const url = payload.pull_request?.html_url;
   const prSlackUserId = slackIds[0];
 
-  const message = `<@${prSlackUserId}> has <${action}> pull request <${url}|${title}>.`;
+  const message = `<@${prSlackUserId}> has *${action}* pull request <${url}|${title}>.`;
   console.log(message);
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
 
@@ -132,7 +132,7 @@ export const execPrReviewRequestedCommentMention = async (
     comment_as_quote += (">" + line);
   })
 
-  const message = `<@${commentSlackUserId}> has <${action}> a comment on a <${pr_state}> pull request <@${pullRequestedSlackUserId}> <${pr_title}>:\n${comment_as_quote}\n${comment_url}.`;
+  const message = `<@${commentSlackUserId}> has *${action}* a comment on a *${pr_state}* pull request <@${pullRequestedSlackUserId}> *${pr_title}*:\n${comment_as_quote}\n${comment_url}.`;
   core.warning(message)
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
 
@@ -150,13 +150,17 @@ export const execPrReviewRequestedMention = async (
   const { repoToken, configurationPath } = allInputs;
   const requestedGithubUsername =
     payload.requested_reviewer?.login || payload.requested_team?.name;
+    const requestUsername = payload.sender?.login;
 
   if (!requestedGithubUsername) {
     throw new Error("Can not find review requested user.");
   }
+  if (!requestUsername) {
+    throw new Error("Can not find review request user.");
+  }
 
   const slackIds = await convertToSlackUsername(
-    [requestedGithubUsername],
+    [requestedGithubUsername, requestUsername],
     githubClient,
     repoToken,
     configurationPath,
@@ -170,9 +174,10 @@ export const execPrReviewRequestedMention = async (
   const title = payload.pull_request?.title;
   const url = payload.pull_request?.html_url;
   const requestedSlackUserId = slackIds[0];
-  const requestUsername = payload.sender?.login;
+  const requestSlackUserId = slackIds[1];
+  
 
-  const message = `<@${requestedSlackUserId}> has been requested to review <${url}|${title}> by ${requestUsername}.`;
+  const message = `<@${requestedSlackUserId}> has been requested to review <${url}|${title}> by <@${requestSlackUserId}>.`;
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
 
   await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
@@ -210,15 +215,15 @@ export const execPullRequestReviewMention = async (
   }
 
   const action = payload.action as string;
-  const title = payload.pull_request?._links?.title as string;
-  const url = payload.pull_request?._links?.html_url as string;
-  const state = payload.pull_request?._links?.state as string;
+  const title = payload.pull_request?.title as string;
+  const url = payload.pull_request?.html_url as string;
+  const state = payload.pull_request?.state as string;
   const body = payload.review?.body as string;
   const review_url = payload.review?.html_url as string;
   const reviewerSlackUserId = slackIds[0];
   const pullRequestSlackUserId = slackIds[1];
 
-  const message = `<@${reviewerSlackUserId}> has <${action}> a review on <${state}> Pull Request <${url}|${title}>, which created by ${pullRequestSlackUserId}.\n ${body} \n ${review_url}`;
+  const message = `<@${reviewerSlackUserId}> has *${action}* a review on *${state}* Pull Request <${url}|${title}>, which created by <@${pullRequestSlackUserId}>.\n ${body} \n ${review_url}`;
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
 
   await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
@@ -259,8 +264,8 @@ export const execIssueMention = async (
   const issueSlackUserId = slackIds[0];
 
   const message = (action === "opened")? 
-    `<@${issueSlackUserId}> has <${action}> an issue <${issue_title}>:\n${issue_body}\n${issue_url}.` :
-    `<@${issueSlackUserId}> has <${action}> an issue <${issue_title}>:\n${issue_url}.`
+    `<@${issueSlackUserId}> has *${action}* an issue <${issue_url}|${issue_title}>:\n${issue_body}.` :
+    `<@${issueSlackUserId}> has *${action}* an issue <${issue_url}|${issue_title}>.`
 
   core.warning(message)
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
@@ -315,7 +320,7 @@ export const execIssueCommentMention = async (
     comment_as_quote += (">" + line);
   })
 
-  const message = `<@${commentSlackUserId}> has <${action}> a comment on a <${issue_state}> issue <@${issueSlackUserId}> <${issue_title}>:\n${comment_as_quote}\n${comment_url}.`;
+  const message = `<@${commentSlackUserId}> has *${action}* a comment on a *${issue_state}* issue <@${issueSlackUserId}> *${issue_title}*:\n${comment_as_quote}\n${comment_url}.`;
   core.warning(message)
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
 
