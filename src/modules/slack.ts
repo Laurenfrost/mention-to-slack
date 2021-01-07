@@ -30,7 +30,7 @@ export const buildSlackPostMessage = (
 };
 
 const openIssueLink =
-  "https://github.com/abeyuya/actions-mention-to-slack/issues/new";
+  "https://github.com/Laurenfrost/mention-to-slack/issues/new";
 
 export const buildSlackErrorMessage = (
   error: Error,
