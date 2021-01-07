@@ -213,11 +213,12 @@ export const execPullRequestReviewMention = async (
   const title = payload.pull_request?._links?.title as string;
   const url = payload.pull_request?._links?.html_url as string;
   const state = payload.pull_request?._links?.state as string;
-  const body = payload.pull_request?._links?.body as string;
+  const body = payload.review?.body as string;
+  const review_url = payload.review?.html_url as string;
   const reviewerSlackUserId = slackIds[0];
   const pullRequestSlackUserId = slackIds[1];
 
-  const message = `<@${reviewerSlackUserId}> has <${action}> a review on <${state}> Pull Request <${url}|${title}>, which created by ${pullRequestSlackUserId}.\n ${body}`;
+  const message = `<@${reviewerSlackUserId}> has <${action}> a review on <${state}> Pull Request <${url}|${title}>, which created by ${pullRequestSlackUserId}.\n ${body} \n ${review_url}`;
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
 
   await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });

@@ -1621,10 +1621,11 @@ exports.execPullRequestReviewMention = async (payload, allInputs, githubClient, 
     const title = (_h = (_g = payload.pull_request) === null || _g === void 0 ? void 0 : _g._links) === null || _h === void 0 ? void 0 : _h.title;
     const url = (_k = (_j = payload.pull_request) === null || _j === void 0 ? void 0 : _j._links) === null || _k === void 0 ? void 0 : _k.html_url;
     const state = (_m = (_l = payload.pull_request) === null || _l === void 0 ? void 0 : _l._links) === null || _m === void 0 ? void 0 : _m.state;
-    const body = (_p = (_o = payload.pull_request) === null || _o === void 0 ? void 0 : _o._links) === null || _p === void 0 ? void 0 : _p.body;
+    const body = (_o = payload.review) === null || _o === void 0 ? void 0 : _o.body;
+    const review_url = (_p = payload.review) === null || _p === void 0 ? void 0 : _p.html_url;
     const reviewerSlackUserId = slackIds[0];
     const pullRequestSlackUserId = slackIds[1];
-    const message = `<@${reviewerSlackUserId}> has <${action}> a review on <${state}> Pull Request <${url}|${title}>, which created by ${pullRequestSlackUserId}.\n ${body}`;
+    const message = `<@${reviewerSlackUserId}> has <${action}> a review on <${state}> Pull Request <${url}|${title}>, which created by ${pullRequestSlackUserId}.\n ${body} \n ${review_url}`;
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
 };
