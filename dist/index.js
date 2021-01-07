@@ -1603,10 +1603,10 @@ exports.execPrReviewRequestedMention = async (payload, allInputs, githubClient, 
 };
 // pull_request_review
 exports.execPullRequestReviewMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
     const { repoToken, configurationPath } = allInputs;
-    const reviewerUsername = (_c = (_b = (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.review) === null || _b === void 0 ? void 0 : _b.user) === null || _c === void 0 ? void 0 : _c.login;
-    const pullRequestUsername = (_f = (_e = (_d = payload.pull_request) === null || _d === void 0 ? void 0 : _d.base) === null || _e === void 0 ? void 0 : _e.user) === null || _f === void 0 ? void 0 : _f.login;
+    const reviewerUsername = (_b = (_a = payload.review) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
+    const pullRequestUsername = (_e = (_d = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.base) === null || _d === void 0 ? void 0 : _d.user) === null || _e === void 0 ? void 0 : _e.login;
     if (!reviewerUsername) {
         throw new Error("Can not find review user.");
     }
@@ -1618,11 +1618,11 @@ exports.execPullRequestReviewMention = async (payload, allInputs, githubClient, 
         return;
     }
     const action = payload.action;
-    const title = (_h = (_g = payload.pull_request) === null || _g === void 0 ? void 0 : _g._links) === null || _h === void 0 ? void 0 : _h.title;
-    const url = (_k = (_j = payload.pull_request) === null || _j === void 0 ? void 0 : _j._links) === null || _k === void 0 ? void 0 : _k.html_url;
-    const state = (_m = (_l = payload.pull_request) === null || _l === void 0 ? void 0 : _l._links) === null || _m === void 0 ? void 0 : _m.state;
-    const body = (_o = payload.review) === null || _o === void 0 ? void 0 : _o.body;
-    const review_url = (_p = payload.review) === null || _p === void 0 ? void 0 : _p.html_url;
+    const title = (_g = (_f = payload.pull_request) === null || _f === void 0 ? void 0 : _f._links) === null || _g === void 0 ? void 0 : _g.title;
+    const url = (_j = (_h = payload.pull_request) === null || _h === void 0 ? void 0 : _h._links) === null || _j === void 0 ? void 0 : _j.html_url;
+    const state = (_l = (_k = payload.pull_request) === null || _k === void 0 ? void 0 : _k._links) === null || _l === void 0 ? void 0 : _l.state;
+    const body = (_m = payload.review) === null || _m === void 0 ? void 0 : _m.body;
+    const review_url = (_o = payload.review) === null || _o === void 0 ? void 0 : _o.html_url;
     const reviewerSlackUserId = slackIds[0];
     const pullRequestSlackUserId = slackIds[1];
     const message = `<@${reviewerSlackUserId}> has <${action}> a review on <${state}> Pull Request <${url}|${title}>, which created by ${pullRequestSlackUserId}.\n ${body} \n ${review_url}`;
