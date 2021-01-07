@@ -6,8 +6,9 @@ This action sends mention to your slack account when you have been mentioned at 
 
 ## Feature
 
-- Send mention to slack if you have been mentioned
+- Send mention to slack if you had some modification on:
   - pull request
+  - issue
 - Send notification to slack if you have been requested to review.
 - Send context to slack if you comment on a PR or Issue. 
   *Both PR comments and Issue comments are triggered by issue_comment event.*
@@ -18,7 +19,6 @@ This action sends mention to your slack account when you have been mentioned at 
 - Send mention to slack if you have been mentioned
   - Review
   - Review comments
-  - issue
   - more and more
 
 ## Inputs
