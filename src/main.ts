@@ -212,7 +212,10 @@ export const execIssueMention = async (
   const issue_url = payload.issue?.html_url as string;
   const issueSlackUserId = slackIds[0];
 
-  const message = `<@${issueSlackUserId}> has <${action}> a issue <${issue_title}>:\n${issue_body}\n${issue_url}.`;
+  const message = action === "opened"? 
+    `<@${issueSlackUserId}> has <${action}> a issue <${issue_title}>:\n${issue_body}\n${issue_url}.` :
+    `<@${issueSlackUserId}> has <${action}> a issue <${issue_title}>:\n${issue_url}.`
+
   core.warning(message)
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
 
