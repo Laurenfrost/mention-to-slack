@@ -178,7 +178,52 @@ export const execPrReviewRequestedMention = async (
   await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
 };
 
-// In progress: Issue metion
+// pull_request_review
+export const execPullRequestReviewMention = async (
+  payload: WebhookPayload,
+  allInputs: AllInputs,
+  githubClient: typeof GithubRepositoryImpl,
+  slackClient: typeof SlackRepositoryImpl,
+  context: Pick<Context, "repo" | "sha">
+): Promise<void> => {
+  const { repoToken, configurationPath } = allInputs;
+  const reviewerUsername = payload.pull_request?.review?.user?.login as string;
+  const pullRequestUsername = payload.pull_request?.base?.user?.login as string;
+
+  if (!reviewerUsername) {
+    throw new Error("Can not find review user.");
+  }
+  if (!pullRequestUsername) {
+    throw new Error("Can not find pull request user.");
+  }
+
+  const slackIds = await convertToSlackUsername(
+    [reviewerUsername, pullRequestUsername],
+    githubClient,
+    repoToken,
+    configurationPath,
+    context
+  );
+
+  if (slackIds.length === 0) {
+    return;
+  }
+
+  const action = payload.action as string;
+  const title = payload.pull_request?._links?.title as string;
+  const url = payload.pull_request?._links?.html_url as string;
+  const state = payload.pull_request?._links?.state as string;
+  const body = payload.pull_request?._links?.body as string;
+  const reviewerSlackUserId = slackIds[0];
+  const pullRequestSlackUserId = slackIds[1];
+
+  const message = `<@${reviewerSlackUserId}> has <${action}> a review on <${state}> Pull Request <${url}|${title}>, which created by ${pullRequestSlackUserId}.\n ${body}`;
+  const { slackWebhookUrl, iconUrl, botName } = allInputs;
+
+  await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
+};
+
+// Issue metion
 export const execIssueMention = async (
   payload: WebhookPayload,
   allInputs: AllInputs,
@@ -212,9 +257,9 @@ export const execIssueMention = async (
   const issue_url = payload.issue?.html_url as string;
   const issueSlackUserId = slackIds[0];
 
-  const message = action === "opened"? 
-    `<@${issueSlackUserId}> has <${action}> a issue <${issue_title}>:\n${issue_body}\n${issue_url}.` :
-    `<@${issueSlackUserId}> has <${action}> a issue <${issue_title}>:\n${issue_url}.`
+  const message = (action === "opened")? 
+    `<@${issueSlackUserId}> has <${action}> an issue <${issue_title}>:\n${issue_body}\n${issue_url}.` :
+    `<@${issueSlackUserId}> has <${action}> an issue <${issue_title}>:\n${issue_url}.`
 
   core.warning(message)
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
@@ -457,6 +502,17 @@ export const main = async (): Promise<void> => {
 
     if (context.eventName === "issues") {
       await execIssueMention(
+        payload,
+        allInputs,
+        GithubRepositoryImpl,
+        SlackRepositoryImpl,
+        context
+      );
+      return;
+    }
+
+    if (context.eventName === "pull_request_review") {
+      await execPullRequestReviewMention(
         payload,
         allInputs,
         GithubRepositoryImpl,
