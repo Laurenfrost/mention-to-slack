@@ -1603,35 +1603,23 @@ exports.execPrReviewRequestedMention = async (payload, allInputs, githubClient, 
 };
 // In progress: Issue metion
 exports.execIssueMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
+    var _a, _b, _c, _d, _e;
     const { repoToken, configurationPath } = allInputs;
-    const commentGithubUsername = (_b = (_a = payload.comment) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
-    const issueGithubUsername = (_d = (_c = payload.issue) === null || _c === void 0 ? void 0 : _c.user) === null || _d === void 0 ? void 0 : _d.login;
-    if (!{ commentGithubUsername }) {
-        throw new Error("Can not find comment user.");
-    }
+    const issueGithubUsername = (_b = (_a = payload.issue) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
     if (!{ issueGithubUsername }) {
         throw new Error("Can not find issue user.");
     }
-    const slackIds = await exports.convertToSlackUsername([commentGithubUsername, issueGithubUsername], githubClient, repoToken, configurationPath, context);
+    const slackIds = await exports.convertToSlackUsername([issueGithubUsername], githubClient, repoToken, configurationPath, context);
     if (slackIds.length === 0) {
         return;
     }
     const action = payload.action;
-    const issue_title = (_e = payload.issue) === null || _e === void 0 ? void 0 : _e.title;
-    const issue_state = (_f = payload.issue) === null || _f === void 0 ? void 0 : _f.state;
-    const comment_body = (_g = payload.comment) === null || _g === void 0 ? void 0 : _g.body;
-    const comment_url = (_h = payload.comment) === null || _h === void 0 ? void 0 : _h.html_url;
-    const commentSlackUserId = slackIds[0];
-    const issueSlackUserId = slackIds[1];
-    // show comment text as quote text.
-    const comment_lines = comment_body.split("\n");
-    var comment_as_quote = "";
-    comment_lines.forEach(line => {
-        core.warning(line);
-        comment_as_quote += (">" + line);
-    });
-    const message = `<@${commentSlackUserId}> has <${action}> a comment on a <${issue_state}> issue <@${issueSlackUserId}> <${issue_title}>:\n${comment_as_quote}\n${comment_url}.`;
+    const issue_title = (_c = payload.issue) === null || _c === void 0 ? void 0 : _c.title;
+    // const issue_state = payload.issue?.state as string;
+    const issue_body = (_d = payload.issue) === null || _d === void 0 ? void 0 : _d.body;
+    const issue_url = (_e = payload.issue) === null || _e === void 0 ? void 0 : _e.html_url;
+    const issueSlackUserId = slackIds[0];
+    const message = `<@${issueSlackUserId}> has <${action}> a issue <${issue_title}>:\n${issue_body}\n${issue_url}.`;
     core.warning(message);
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });

@@ -187,18 +187,14 @@ export const execIssueMention = async (
   context: Pick<Context, "repo" | "sha">
 ): Promise<void> => {
   const { repoToken, configurationPath } = allInputs;
-  const commentGithubUsername = payload.comment?.user?.login as string;
   const issueGithubUsername = payload.issue?.user?.login as string;
 
-  if (!{commentGithubUsername}) {
-    throw new Error("Can not find comment user.");
-  }
   if (!{issueGithubUsername}) {
     throw new Error("Can not find issue user.");
   }
 
   const slackIds = await convertToSlackUsername(
-    [commentGithubUsername, issueGithubUsername],
+    [issueGithubUsername],
     githubClient,
     repoToken,
     configurationPath,
@@ -211,21 +207,12 @@ export const execIssueMention = async (
 
   const action = payload.action as string;
   const issue_title = payload.issue?.title as string;
-  const issue_state = payload.issue?.state as string;
-  const comment_body = payload.comment?.body as string;
-  const comment_url = payload.comment?.html_url as string;
-  const commentSlackUserId = slackIds[0];
-  const issueSlackUserId = slackIds[1];
+  // const issue_state = payload.issue?.state as string;
+  const issue_body = payload.issue?.body as string;
+  const issue_url = payload.issue?.html_url as string;
+  const issueSlackUserId = slackIds[0];
 
-  // show comment text as quote text.
-  const comment_lines = comment_body.split("\n")
-  var comment_as_quote = "";
-  comment_lines.forEach(line => {
-    core.warning(line)
-    comment_as_quote += (">" + line);
-  })
-
-  const message = `<@${commentSlackUserId}> has <${action}> a comment on a <${issue_state}> issue <@${issueSlackUserId}> <${issue_title}>:\n${comment_as_quote}\n${comment_url}.`;
+  const message = `<@${issueSlackUserId}> has <${action}> a issue <${issue_title}>:\n${issue_body}\n${issue_url}.`;
   core.warning(message)
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
 
