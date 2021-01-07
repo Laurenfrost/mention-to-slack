@@ -187,7 +187,7 @@ export const execPullRequestReviewMention = async (
   context: Pick<Context, "repo" | "sha">
 ): Promise<void> => {
   const { repoToken, configurationPath } = allInputs;
-  const reviewerUsername = payload.pull_request?.review?.user?.login as string;
+  const reviewerUsername = payload.review?.user?.login as string;
   const pullRequestUsername = payload.pull_request?.base?.user?.login as string;
 
   if (!reviewerUsername) {
