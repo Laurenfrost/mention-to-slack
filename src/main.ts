@@ -229,6 +229,53 @@ export const execPullRequestReviewMention = async (
   await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
 };
 
+// pull_request_review_comment
+export const execPullRequestReviewComment = async (
+  payload: WebhookPayload,
+  allInputs: AllInputs,
+  githubClient: typeof GithubRepositoryImpl,
+  slackClient: typeof SlackRepositoryImpl,
+  context: Pick<Context, "repo" | "sha">
+): Promise<void> => {
+  const { repoToken, configurationPath } = allInputs;
+  const reviewerCommentUsername = payload.comment?.user?.login as string;
+  const pullRequestUsername = payload.pull_request?.user?.login as string;
+
+  if (!reviewerCommentUsername) {
+    throw new Error("Can not find review comment user.");
+  }
+  if (!pullRequestUsername) {
+    throw new Error("Can not find pull request user.");
+  }
+
+  const slackIds = await convertToSlackUsername(
+    [reviewerCommentUsername, pullRequestUsername],
+    githubClient,
+    repoToken,
+    configurationPath,
+    context
+  );
+
+  if (slackIds.length === 0) {
+    return;
+  }
+
+  const action = payload.action as string;
+  const title = payload.pull_request?.title as string;
+  const url = payload.pull_request?.html_url as string;
+  const state = payload.pull_request?.state as string;
+  const body = payload.review?.body as string;
+  const diffHunk = payload.comment?.diff_hunk as string;
+  const review_url = payload.review?.html_url as string;
+  const reviewCommentSlackUserId = slackIds[0];
+  const pullRequestSlackUserId = slackIds[1];
+
+  const message = `<@${reviewCommentSlackUserId}> has *${action}* a comment review on *${state}* Pull Request <${url}|${title}>, which created by <@${pullRequestSlackUserId}>.\n ${body} \n\`\`\`${diffHunk}\n\`\`\` \n ${review_url}`;
+  const { slackWebhookUrl, iconUrl, botName } = allInputs;
+
+  await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
+};
+
 // Issue metion
 export const execIssueMention = async (
   payload: WebhookPayload,
@@ -519,6 +566,17 @@ export const main = async (): Promise<void> => {
 
     if (context.eventName === "pull_request_review") {
       await execPullRequestReviewMention(
+        payload,
+        allInputs,
+        GithubRepositoryImpl,
+        SlackRepositoryImpl,
+        context
+      );
+      return;
+    }
+
+    if (context.eventName === "pull_request_review_comment") {
+      await execPullRequestReviewComment(
         payload,
         allInputs,
         GithubRepositoryImpl,

@@ -1512,7 +1512,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.main = exports.execPostError = exports.execNormalMention = exports.execIssueCommentMention = exports.execIssueMention = exports.execPullRequestReviewMention = exports.execPrReviewRequestedMention = exports.execPrReviewRequestedCommentMention = exports.execPullRequestMention = exports.convertToSlackUsername = void 0;
+exports.main = exports.execPostError = exports.execNormalMention = exports.execIssueCommentMention = exports.execIssueMention = exports.execPullRequestReviewComment = exports.execPullRequestReviewMention = exports.execPrReviewRequestedMention = exports.execPrReviewRequestedCommentMention = exports.execPullRequestMention = exports.convertToSlackUsername = void 0;
 const core = __importStar(__webpack_require__(470));
 const github_1 = __webpack_require__(469);
 const github_2 = __webpack_require__(559);
@@ -1630,6 +1630,35 @@ exports.execPullRequestReviewMention = async (payload, allInputs, githubClient, 
     const reviewerSlackUserId = slackIds[0];
     const pullRequestSlackUserId = slackIds[1];
     const message = `<@${reviewerSlackUserId}> has *${action}* a review on *${state}* Pull Request <${url}|${title}>, which created by <@${pullRequestSlackUserId}>.\n ${body} \n ${review_url}`;
+    const { slackWebhookUrl, iconUrl, botName } = allInputs;
+    await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
+};
+// pull_request_review_comment
+exports.execPullRequestReviewComment = async (payload, allInputs, githubClient, slackClient, context) => {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+    const { repoToken, configurationPath } = allInputs;
+    const reviewerCommentUsername = (_b = (_a = payload.comment) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
+    const pullRequestUsername = (_d = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.user) === null || _d === void 0 ? void 0 : _d.login;
+    if (!reviewerCommentUsername) {
+        throw new Error("Can not find review comment user.");
+    }
+    if (!pullRequestUsername) {
+        throw new Error("Can not find pull request user.");
+    }
+    const slackIds = await exports.convertToSlackUsername([reviewerCommentUsername, pullRequestUsername], githubClient, repoToken, configurationPath, context);
+    if (slackIds.length === 0) {
+        return;
+    }
+    const action = payload.action;
+    const title = (_e = payload.pull_request) === null || _e === void 0 ? void 0 : _e.title;
+    const url = (_f = payload.pull_request) === null || _f === void 0 ? void 0 : _f.html_url;
+    const state = (_g = payload.pull_request) === null || _g === void 0 ? void 0 : _g.state;
+    const body = (_h = payload.review) === null || _h === void 0 ? void 0 : _h.body;
+    const diffHunk = (_j = payload.comment) === null || _j === void 0 ? void 0 : _j.diff_hunk;
+    const review_url = (_k = payload.review) === null || _k === void 0 ? void 0 : _k.html_url;
+    const reviewCommentSlackUserId = slackIds[0];
+    const pullRequestSlackUserId = slackIds[1];
+    const message = `<@${reviewCommentSlackUserId}> has *${action}* a comment review on *${state}* Pull Request <${url}|${title}>, which created by <@${pullRequestSlackUserId}>.\n ${body} \n\`\`\`${diffHunk}\n\`\`\` \n ${review_url}`;
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
 };
@@ -1815,6 +1844,10 @@ exports.main = async () => {
         }
         if (github_1.context.eventName === "pull_request_review") {
             await exports.execPullRequestReviewMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
+            return;
+        }
+        if (github_1.context.eventName === "pull_request_review_comment") {
+            await exports.execPullRequestReviewComment(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
             return;
         }
         // await execNormalMention(
