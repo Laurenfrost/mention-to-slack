@@ -1659,7 +1659,7 @@ exports.execPullRequestReviewComment = async (payload, allInputs, githubClient, 
     const comment_url = (_l = payload.comment) === null || _l === void 0 ? void 0 : _l.html_url;
     const reviewCommentSlackUserId = slackIds[0];
     const pullRequestSlackUserId = slackIds[1];
-    const message = `<@${reviewCommentSlackUserId}> has *${action}* a comment review on *${state}* Pull Request <${url}|${title}>, which created by <@${pullRequestSlackUserId}>.\n ${body} \n\`\`\`${changeFilePath}\n${diffHunk}\`\`\` \n ${comment_url}`;
+    const message = `<@${reviewCommentSlackUserId}> has *${action}* a comment review on *${state}* Pull Request <${url}|${title}>, which created by <@${pullRequestSlackUserId}>.\n \n\`\`\`${changeFilePath}\n${diffHunk}\`\`\`\n${body}\n${comment_url}`;
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
 };
