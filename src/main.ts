@@ -264,13 +264,14 @@ export const execPullRequestReviewComment = async (
   const title = payload.pull_request?.title as string;
   const url = payload.pull_request?.html_url as string;
   const state = payload.pull_request?.state as string;
-  const body = payload.review?.body as string;
+  const body = payload.comment?.body as string;
+  const changeFilePath = payload.comment?.path as string;
   const diffHunk = payload.comment?.diff_hunk as string;
-  const review_url = payload.review?.html_url as string;
+  const comment_url = payload.comment?.html_url as string;
   const reviewCommentSlackUserId = slackIds[0];
   const pullRequestSlackUserId = slackIds[1];
 
-  const message = `<@${reviewCommentSlackUserId}> has *${action}* a comment review on *${state}* Pull Request <${url}|${title}>, which created by <@${pullRequestSlackUserId}>.\n ${body} \n\`\`\`${diffHunk}\n\`\`\` \n ${review_url}`;
+  const message = `<@${reviewCommentSlackUserId}> has *${action}* a comment review on *${state}* Pull Request <${url}|${title}>, which created by <@${pullRequestSlackUserId}>.\n ${body} \n\`\`\`${changeFilePath}\n${diffHunk}\`\`\` \n ${comment_url}`;
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
 
   await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });

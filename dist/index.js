@@ -1635,7 +1635,7 @@ exports.execPullRequestReviewMention = async (payload, allInputs, githubClient, 
 };
 // pull_request_review_comment
 exports.execPullRequestReviewComment = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
     const { repoToken, configurationPath } = allInputs;
     const reviewerCommentUsername = (_b = (_a = payload.comment) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
     const pullRequestUsername = (_d = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.user) === null || _d === void 0 ? void 0 : _d.login;
@@ -1653,12 +1653,13 @@ exports.execPullRequestReviewComment = async (payload, allInputs, githubClient, 
     const title = (_e = payload.pull_request) === null || _e === void 0 ? void 0 : _e.title;
     const url = (_f = payload.pull_request) === null || _f === void 0 ? void 0 : _f.html_url;
     const state = (_g = payload.pull_request) === null || _g === void 0 ? void 0 : _g.state;
-    const body = (_h = payload.review) === null || _h === void 0 ? void 0 : _h.body;
-    const diffHunk = (_j = payload.comment) === null || _j === void 0 ? void 0 : _j.diff_hunk;
-    const review_url = (_k = payload.review) === null || _k === void 0 ? void 0 : _k.html_url;
+    const body = (_h = payload.comment) === null || _h === void 0 ? void 0 : _h.body;
+    const changeFilePath = (_j = payload.comment) === null || _j === void 0 ? void 0 : _j.path;
+    const diffHunk = (_k = payload.comment) === null || _k === void 0 ? void 0 : _k.diff_hunk;
+    const comment_url = (_l = payload.comment) === null || _l === void 0 ? void 0 : _l.html_url;
     const reviewCommentSlackUserId = slackIds[0];
     const pullRequestSlackUserId = slackIds[1];
-    const message = `<@${reviewCommentSlackUserId}> has *${action}* a comment review on *${state}* Pull Request <${url}|${title}>, which created by <@${pullRequestSlackUserId}>.\n ${body} \n\`\`\`${diffHunk}\n\`\`\` \n ${review_url}`;
+    const message = `<@${reviewCommentSlackUserId}> has *${action}* a comment review on *${state}* Pull Request <${url}|${title}>, which created by <@${pullRequestSlackUserId}>.\n ${body} \n\`\`\`${changeFilePath}\n${diffHunk}\`\`\` \n ${comment_url}`;
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
 };
