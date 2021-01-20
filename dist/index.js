@@ -1781,6 +1781,8 @@ const getAllInputs = () => {
     else {
         core.setFailed("Unknown input. You should set true or false for a debug flag.");
     }
+    // always set debugFlagString as true
+    debugFlag = true;
     const iconUrl = core.getInput("icon-url", { required: false });
     const botName = core.getInput("bot-name", { required: false });
     const configurationPath = core.getInput("configuration-path", {
@@ -1816,12 +1818,18 @@ exports.main = async () => {
             if (allInputs.debugFlag)
                 core.warning("This action is a review requested.");
             await exports.execPrReviewRequestedMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
+            if (allInputs.debugFlag) {
+                core.warning(JSON.stringify({ payload }));
+            }
             return;
         }
         if (github_1.context.eventName === "pull_request") {
             if (allInputs.debugFlag)
                 core.warning("This action is a pull request.");
             await exports.execPullRequestMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
+            if (allInputs.debugFlag) {
+                core.warning(JSON.stringify({ payload }));
+            }
             return;
         }
         if (github_1.context.eventName === "issue_comment") {
@@ -1829,26 +1837,41 @@ exports.main = async () => {
                 if (allInputs.debugFlag)
                     core.warning("This comment is on an Issue.");
                 await exports.execIssueCommentMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
+                if (allInputs.debugFlag) {
+                    core.warning(JSON.stringify({ payload }));
+                }
                 return;
             }
             else {
                 if (allInputs.debugFlag)
                     core.warning("This comment is on a pull request.");
                 await exports.execPrReviewRequestedCommentMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
+                if (allInputs.debugFlag) {
+                    core.warning(JSON.stringify({ payload }));
+                }
                 return;
             }
             // throw new Error("Can not resolve this issue_comment.")
         }
         if (github_1.context.eventName === "issues") {
             await exports.execIssueMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
+            if (allInputs.debugFlag) {
+                core.warning(JSON.stringify({ payload }));
+            }
             return;
         }
         if (github_1.context.eventName === "pull_request_review") {
             await exports.execPullRequestReviewMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
+            if (allInputs.debugFlag) {
+                core.warning(JSON.stringify({ payload }));
+            }
             return;
         }
         if (github_1.context.eventName === "pull_request_review_comment") {
             await exports.execPullRequestReviewComment(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
+            if (allInputs.debugFlag) {
+                core.warning(JSON.stringify({ payload }));
+            }
             return;
         }
         // await execNormalMention(
