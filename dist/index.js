@@ -1524,29 +1524,10 @@ exports.convertToSlackUsername = async (githubUsernames, githubClient, repoToken
     //   .filter((slackId) => slackId !== undefined) as string[];
     const slackIds = githubUsernames.map((githubUsername) => {
         var slackId = mapping[githubUsername];
-        return (slackId !== undefined) ? slackId : githubUsernames;
+        return (slackId !== undefined) ? slackId : githubUsername;
     });
     return slackIds;
 };
-// export const convertToSlackUsername = async (
-//   githubUsernames: string[],
-//   githubClient: typeof GithubRepositoryImpl,
-//   repoToken: string,
-//   configurationPath: string,
-//   context: Pick<Context, "repo" | "sha">
-// ): Promise<string[]> => {
-//   const slackIds = githubUsernames.map(async (it) => { 
-//     const slackId = await convertSingleName(
-//       [it],
-//       githubClient,
-//       repoToken,
-//       configurationPath,
-//       context
-//     );
-//     return (slackId[0] === "undefined" ? it : slackId[0]) as string;
-//   });
-//   return slackIds;
-// };
 // Pull Request
 exports.execPullRequestMention = async (payload, allInputs, githubClient, slackClient, context) => {
     var _a, _b, _c, _d;
