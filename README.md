@@ -15,8 +15,8 @@ This action sends mention to your slack account when you have been mentioned at 
   ![PR & comment](pics/20210120181316.png)
 
 - Distinguish an approve from other pull request review events.
-  ![approve](pics/20210120180639.png)
 - Return GitHub ID when Slack ID is not found in `.github/mention-to-slack.yml`
+  ![approve](pics/20210120180639.png)
 
 ## TODO
 
