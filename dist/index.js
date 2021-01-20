@@ -1607,7 +1607,7 @@ exports.execPrReviewRequestedMention = async (payload, allInputs, githubClient, 
 };
 // pull_request_review
 exports.execPullRequestReviewMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
     const { repoToken, configurationPath } = allInputs;
     const reviewerUsername = (_b = (_a = payload.review) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
     const pullRequestUsername = (_e = (_d = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.base) === null || _d === void 0 ? void 0 : _d.user) === null || _e === void 0 ? void 0 : _e.login;
@@ -1617,6 +1617,10 @@ exports.execPullRequestReviewMention = async (payload, allInputs, githubClient, 
     if (!pullRequestUsername) {
         throw new Error("Can not find pull request user.");
     }
+    const msg1 = `reviewr is ${reviewerUsername}`;
+    const msg2 = `pull requester is ${pullRequestUsername}`;
+    console.log(msg1);
+    console.log(msg2);
     const slackIds = await exports.convertToSlackUsername([reviewerUsername, pullRequestUsername], githubClient, repoToken, configurationPath, context);
     if (slackIds.length === 0) {
         return;
@@ -1629,7 +1633,11 @@ exports.execPullRequestReviewMention = async (payload, allInputs, githubClient, 
     const review_url = (_k = payload.review) === null || _k === void 0 ? void 0 : _k.html_url;
     const reviewerSlackUserId = slackIds[0];
     const pullRequestSlackUserId = slackIds[1];
-    const message = `<@${reviewerSlackUserId}> has *${action}* a review on *${state}* Pull Request <${url}|${title}>, which created by <@${pullRequestSlackUserId}>.\n ${body} \n ${review_url}`;
+    const cm_state = (_l = payload.review) === null || _l === void 0 ? void 0 : _l.state;
+    const message = (cm_state === "approved") ?
+        `<@${reviewerSlackUserId}> has *approved* Pull Request <${url}|${title}>, which created by <@${pullRequestSlackUserId}>\n ${review_url}`
+        :
+            `<@${reviewerSlackUserId}> has *${action}* a review on *${state}* Pull Request <${url}|${title}>, which created by <@${pullRequestSlackUserId}>.\n ${body} \n ${review_url}`;
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
 };

@@ -202,6 +202,11 @@ export const execPullRequestReviewMention = async (
     throw new Error("Can not find pull request user.");
   }
 
+  const msg1 = `reviewr is ${reviewerUsername}`
+  const msg2 = `pull requester is ${pullRequestUsername}`
+  console.log(msg1)
+  console.log(msg2)
+
   const slackIds = await convertToSlackUsername(
     [reviewerUsername, pullRequestUsername],
     githubClient,
@@ -222,8 +227,13 @@ export const execPullRequestReviewMention = async (
   const review_url = payload.review?.html_url as string;
   const reviewerSlackUserId = slackIds[0];
   const pullRequestSlackUserId = slackIds[1];
+  const cm_state = payload.review?.state as string;
 
-  const message = `<@${reviewerSlackUserId}> has *${action}* a review on *${state}* Pull Request <${url}|${title}>, which created by <@${pullRequestSlackUserId}>.\n ${body} \n ${review_url}`;
+  const message = (cm_state === "approved")?
+    `<@${reviewerSlackUserId}> has *approved* Pull Request <${url}|${title}>, which created by <@${pullRequestSlackUserId}>\n ${review_url}`
+    :
+    `<@${reviewerSlackUserId}> has *${action}* a review on *${state}* Pull Request <${url}|${title}>, which created by <@${pullRequestSlackUserId}>.\n ${body} \n ${review_url}`;
+ 
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
 
   await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
