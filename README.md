@@ -1,33 +1,34 @@
 # Convert Github mention to Slack mention
 
-!!! This action modified from [actions-mention-to-slack](https://github.com/abeyuya/actions-mention-to-slack) !!!
+This action modified from [actions-mention-to-slack](https://github.com/abeyuya/actions-mention-to-slack).
 
 This action sends mention to your slack account when you have been mentioned at github.
 
 ## Feature
 
-- Send mention to slack if you had some modification on:
-  - pull request
-  - issue
 - Send notification to slack if you have been requested to review.
+- Send mention to slack if you had some modification on pull request or issue.
 - Send context to slack if you comment on a PR or Issue. 
   *Both PR comments and Issue comments are triggered by issue_comment event.*
   *And workflows should be at default branch to trigger issue_comment event.*
+  ![PR & comment](pics/20210120181021.png)
+  ![PR & comment](pics/20210120181316.png)
+
+- Distinguish an approve from other pull request review events.
+  ![approve](pics/20210120180639.png)
+- Return GitHub ID when Slack ID is not found in `.github/mention-to-slack.yml`
 
 ## TODO
 
-- Send mention to slack if you have been mentioned
-  - Review
-  - Review comments
-  - more and more
+- Nothing, for now.
 
 ## Inputs
 
 | Name | Required | Default | Description |
 | :--- | :--- | :--- | :--- |
-| configuration-path | Yes | .github/mention-to-slack.yml | Mapping config for Github username to Slack member ID. |
+| configuration-path | Yes | `.github/mention-to-slack.yml` | Mapping config for Github username to Slack member ID. |
 | slack-webhook-url | Yes | Null | Slack Incomming Webhook URL to notify. |
-| repo-token | Yes | Null | Github access token to fetch .github/mention-to-slack.yml file. |
+| repo-token | Yes | Null | Github access token to fetch `.github/mention-to-slack.yml` file. |
 | bot-name | No | Github Mention To Slack | Display name for this bot on Slack. |
 | icon-url | No | Null | Display icon url for this bot on Slack. |
 | run-id | No | Null | Used for the link in the error message when an error occurs. |
@@ -77,7 +78,7 @@ jobs:
 github_username_A: "slack_member_id_A"
 github_username_B: "slack_member_id_B"
 github_username_C: "slack_member_id_C"
-abeyuya: "XXXXXXXXX"
+Laurenfrost: "XXXXXXXXX"
 
 # For Github Team
 # github_teamname: "slack_member_id"
