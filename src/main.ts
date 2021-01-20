@@ -199,7 +199,7 @@ export const execPullRequestReviewMention = async (
 ): Promise<void> => {
   const { repoToken, configurationPath } = allInputs;
   const reviewerUsername = payload.review?.user?.login as string;
-  const pullRequestUsername = payload.pull_request?.base?.user?.login as string;
+  const pullRequestUsername = payload.pull_request?.user?.login as string;
 
   if (!reviewerUsername) {
     throw new Error("Can not find review user.");
