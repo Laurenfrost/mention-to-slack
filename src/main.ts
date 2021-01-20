@@ -469,6 +469,8 @@ const getAllInputs = (): AllInputs => {
   } else {
     core.setFailed("Unknown input. You should set true or false for a debug flag.")
   }
+  // always set debugFlagString as true
+  debugFlag = true
 
   const iconUrl = core.getInput("icon-url", { required: false });
   const botName = core.getInput("bot-name", { required: false });
@@ -513,6 +515,7 @@ export const main = async (): Promise<void> => {
         SlackRepositoryImpl,
         context
       );
+      if (allInputs.debugFlag) {core.warning(JSON.stringify({ payload }));}
       return;
     }
     
@@ -525,6 +528,7 @@ export const main = async (): Promise<void> => {
         SlackRepositoryImpl,
         context
       );
+      if (allInputs.debugFlag) {core.warning(JSON.stringify({ payload }));}
       return;
     }
 
@@ -538,6 +542,7 @@ export const main = async (): Promise<void> => {
           SlackRepositoryImpl,
           context
         );
+        if (allInputs.debugFlag) {core.warning(JSON.stringify({ payload }));}
         return;
       }
       else {
@@ -549,6 +554,7 @@ export const main = async (): Promise<void> => {
           SlackRepositoryImpl,
           context
         );
+        if (allInputs.debugFlag) {core.warning(JSON.stringify({ payload }));}
         return;
       }
       // throw new Error("Can not resolve this issue_comment.")
@@ -562,6 +568,7 @@ export const main = async (): Promise<void> => {
         SlackRepositoryImpl,
         context
       );
+      if (allInputs.debugFlag) {core.warning(JSON.stringify({ payload }));}
       return;
     }
 
@@ -573,6 +580,7 @@ export const main = async (): Promise<void> => {
         SlackRepositoryImpl,
         context
       );
+      if (allInputs.debugFlag) {core.warning(JSON.stringify({ payload }));}
       return;
     }
 
@@ -584,6 +592,7 @@ export const main = async (): Promise<void> => {
         SlackRepositoryImpl,
         context
       );
+      if (allInputs.debugFlag) {core.warning(JSON.stringify({ payload }));}
       return;
     }
 
