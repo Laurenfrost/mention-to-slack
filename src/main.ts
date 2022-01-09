@@ -1,18 +1,10 @@
 import * as core from "@actions/core";
-import { context } from "@actions/github";
-import { Context } from "@actions/github/lib/context";
-import { WebhookPayload } from "@actions/github/lib/interfaces";
+import {context} from "@actions/github";
+import {Context} from "@actions/github/lib/context";
+import {WebhookPayload} from "@actions/github/lib/interfaces";
 
-import {
-  pickupUsername,
-  pickupInfoFromGithubPayload,
-  GithubRepositoryImpl,
-} from "./modules/github";
-import {
-  buildSlackPostMessage,
-  buildSlackErrorMessage,
-  SlackRepositoryImpl,
-} from "./modules/slack";
+import {GithubRepositoryImpl, pickupInfoFromGithubPayload, pickupUsername,} from "./modules/github";
+import {buildSlackErrorMessage, buildSlackPostMessage, SlackRepositoryImpl,} from "./modules/slack";
 
 export type AllInputs = {
   repoToken: string;
@@ -42,14 +34,12 @@ export const convertToSlackUsername = async (
   // const slackIds = githubUsernames
   //   .map((githubUsername) => mapping[githubUsername])
   //   .filter((slackId) => slackId !== undefined) as string[];
-  const slackIds = githubUsernames.map(
-    (githubUsername) => {
-    var slackId = mapping[githubUsername];
-    return (slackId !== undefined)? slackId : githubUsername;
-    }
+  return githubUsernames.map(
+      (githubUsername) => {
+        const slackId = mapping[githubUsername];
+        return (slackId !== undefined) ? slackId : githubUsername;
+      }
   ) as string[];
-
-  return slackIds;
 };
 
 // Pull Request
@@ -132,7 +122,7 @@ export const execPrReviewRequestedCommentMention = async (
 
   // show comment text as quote text.
   const comment_lines = comment_body.split("\n")
-  var comment_as_quote = "";
+  let comment_as_quote = "";
   comment_lines.forEach(line => {
     core.warning(line)
     comment_as_quote += (">" + line);
@@ -304,7 +294,7 @@ export const execIssueMention = async (
   const { repoToken, configurationPath } = allInputs;
   const issueGithubUsername = payload.issue?.user?.login as string;
 
-  if (!{issueGithubUsername}) {
+  if (!issueGithubUsername) {
     throw new Error("Can not find issue user.");
   }
 
@@ -349,10 +339,10 @@ export const execIssueCommentMention = async (
   const commentGithubUsername = payload.comment?.user?.login as string;
   const issueGithubUsername = payload.issue?.user?.login as string;
 
-  if (!{commentGithubUsername}) {
+  if (!commentGithubUsername) {
     throw new Error("Can not find comment user.");
   }
-  if (!{issueGithubUsername}) {
+  if (!issueGithubUsername) {
     throw new Error("Can not find issue user.");
   }
 
@@ -378,7 +368,7 @@ export const execIssueCommentMention = async (
 
   // show comment text as quote text.
   const comment_lines = comment_body.split("\n")
-  var comment_as_quote = "";
+  let comment_as_quote = "";
   comment_lines.forEach(line => {
     core.warning(line)
     comment_as_quote += (">" + line);
@@ -471,7 +461,7 @@ const getAllInputs = (): AllInputs => {
   }
 
   const debugFlagString = core.getInput("debug-flag", { required: false})
-  var debugFlag = false
+  let debugFlag = false;
   if (!debugFlagString) {
     core.warning("Set debugFlag as false by default.");
     debugFlag = false;
@@ -485,8 +475,6 @@ const getAllInputs = (): AllInputs => {
   } else {
     core.setFailed("Unknown input. You should set true or false for a debug flag.")
   }
-  // always set debugFlagString as true
-  debugFlag = true
 
   const iconUrl = core.getInput("icon-url", { required: false });
   const botName = core.getInput("bot-name", { required: false });
@@ -523,7 +511,7 @@ export const main = async (): Promise<void> => {
     }
 
     if (payload.action === "review_requested") {
-      if (allInputs.debugFlag) core.warning("This action is a review requested.")
+      core.info("This action is a review requested.")
       await execPrReviewRequestedMention(
         payload,
         allInputs,
@@ -531,95 +519,87 @@ export const main = async (): Promise<void> => {
         SlackRepositoryImpl,
         context
       );
-      if (allInputs.debugFlag) {core.warning(JSON.stringify({ payload }));}
-      return;
-    }
-    
-    if (context.eventName === "pull_request") {
-      if (allInputs.debugFlag) core.warning("This action is a pull request.")
-      await execPullRequestMention(
-        payload,
-        allInputs,
-        GithubRepositoryImpl,
-        SlackRepositoryImpl,
-        context
-      );
-      if (allInputs.debugFlag) {core.warning(JSON.stringify({ payload }));}
+      core.debug(JSON.stringify({ payload }));
       return;
     }
 
-    if (context.eventName === "issue_comment") {
-      if (payload.issue?.pull_request == undefined) {
-        if (allInputs.debugFlag) core.warning("This comment is on an Issue.")
-        await execIssueCommentMention(
-          payload,
-          allInputs,
-          GithubRepositoryImpl,
-          SlackRepositoryImpl,
-          context
+    switch (context.eventName) {
+      case "pull_request": {
+        core.info("This action is a pull request.")
+        await execPullRequestMention(
+            payload,
+            allInputs,
+            GithubRepositoryImpl,
+            SlackRepositoryImpl,
+            context
         );
-        if (allInputs.debugFlag) {core.warning(JSON.stringify({ payload }));}
+        core.debug(JSON.stringify({ payload }));
         return;
       }
-      else {
-        if (allInputs.debugFlag) core.warning("This comment is on a pull request.")
-        await execPrReviewRequestedCommentMention(
-          payload,
-          allInputs,
-          GithubRepositoryImpl,
-          SlackRepositoryImpl,
-          context
+      case "issue_comment": {
+        if (payload.issue?.pull_request == undefined) {
+          core.info("This comment is on an Issue.")
+          await execIssueCommentMention(
+              payload,
+              allInputs,
+              GithubRepositoryImpl,
+              SlackRepositoryImpl,
+              context
+          );
+          core.debug(JSON.stringify({ payload }));
+          return;
+        }
+        else {
+          core.info("This comment is on a pull request.")
+          await execPrReviewRequestedCommentMention(
+              payload,
+              allInputs,
+              GithubRepositoryImpl,
+              SlackRepositoryImpl,
+              context
+          );
+          core.debug(JSON.stringify({ payload }));
+          return;
+        }
+      }
+      case "issues": {
+        core.info("This action is a issue.")
+        await execIssueMention(
+            payload,
+            allInputs,
+            GithubRepositoryImpl,
+            SlackRepositoryImpl,
+            context
         );
-        if (allInputs.debugFlag) {core.warning(JSON.stringify({ payload }));}
+        core.debug(JSON.stringify({ payload }));
         return;
       }
-      // throw new Error("Can not resolve this issue_comment.")
+      case "pull_request_review": {
+        core.info("This action is a pull_request_review.")
+        await execPullRequestReviewMention(
+            payload,
+            allInputs,
+            GithubRepositoryImpl,
+            SlackRepositoryImpl,
+            context
+        );
+        core.debug(JSON.stringify({ payload }));
+        return;
+      }
+      case "pull_request_review_comment": {
+        core.info("This action is a pull_request_review_comment.")
+        await execPullRequestReviewComment(
+            payload,
+            allInputs,
+            GithubRepositoryImpl,
+            SlackRepositoryImpl,
+            context
+        );
+        core.debug(JSON.stringify({ payload }));
+        return;
+      }
     }
-
-    if (context.eventName === "issues") {
-      await execIssueMention(
-        payload,
-        allInputs,
-        GithubRepositoryImpl,
-        SlackRepositoryImpl,
-        context
-      );
-      if (allInputs.debugFlag) {core.warning(JSON.stringify({ payload }));}
-      return;
-    }
-
-    if (context.eventName === "pull_request_review") {
-      await execPullRequestReviewMention(
-        payload,
-        allInputs,
-        GithubRepositoryImpl,
-        SlackRepositoryImpl,
-        context
-      );
-      if (allInputs.debugFlag) {core.warning(JSON.stringify({ payload }));}
-      return;
-    }
-
-    if (context.eventName === "pull_request_review_comment") {
-      await execPullRequestReviewComment(
-        payload,
-        allInputs,
-        GithubRepositoryImpl,
-        SlackRepositoryImpl,
-        context
-      );
-      if (allInputs.debugFlag) {core.warning(JSON.stringify({ payload }));}
-      return;
-    }
-
-    // await execNormalMention(
-    //   payload,
-    //   allInputs,
-    //   GithubRepositoryImpl,
-    //   SlackRepositoryImpl,
-    //   context
-    // );
-    throw new Error("Unexpected event.");
+    core.error("Unexpected event.");
   } catch (error) {
     await execPostError(error, allInputs, SlackRepositoryImpl);
     core.warning(JSON.stringify({ payload }));
