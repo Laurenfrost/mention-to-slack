@@ -3,8 +3,8 @@ import {context} from "@actions/github";
 import {Context} from "@actions/github/lib/context";
 import {WebhookPayload} from "@actions/github/lib/interfaces";
 
-import {GithubRepositoryImpl, pickupInfoFromGithubPayload, pickupUsername,} from "./modules/github";
-import {buildSlackErrorMessage, buildSlackPostMessage, SlackRepositoryImpl,} from "./modules/slack";
+import {GithubRepositoryImpl} from "./modules/github";
+import {buildSlackErrorMessage, SlackRepositoryImpl,} from "./modules/slack";
 
 export type AllInputs = {
   repoToken: string;
@@ -189,7 +189,7 @@ export const execPullRequestReviewMention = async (
 ): Promise<void> => {
   const { repoToken, configurationPath } = allInputs;
   const reviewerUsername = payload.review?.user?.login as string;
-  const pullRequestUsername = payload.pull_request?.user?.login as string;
+  const pullRequestUsername = payload.pull_request?.user.login as string;
 
   if (!reviewerUsername) {
     throw new Error("Can not find review user.");
@@ -376,50 +376,6 @@ export const execIssueCommentMention = async (
 
   const message = `<@${commentSlackUserId}> has *${action}* a comment on a *${issue_state}* issue <@${issueSlackUserId}> *${issue_title}*:\n${comment_as_quote}\n${comment_url}.`;
   core.warning(message)
-  const { slackWebhookUrl, iconUrl, botName } = allInputs;
-
-  await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
-};
-
-export const execNormalMention = async (
-  payload: WebhookPayload,
-  allInputs: AllInputs,
-  githubClient: typeof GithubRepositoryImpl,
-  slackClient: typeof SlackRepositoryImpl,
-  context: Pick<Context, "repo" | "sha">
-): Promise<void> => {
-  const info = pickupInfoFromGithubPayload(payload);
-
-  if (info.body === null) {
-    return;
-  }
-
-  const githubUsernames = pickupUsername(info.body);
-  if (githubUsernames.length === 0) {
-    return;
-  }
-
-  const { repoToken, configurationPath } = allInputs;
-  const slackIds = await convertToSlackUsername(
-    githubUsernames,
-    githubClient,
-    repoToken,
-    configurationPath,
-    context
-  );
-
-  if (slackIds.length === 0) {
-    return;
-  }
-
-  const message = buildSlackPostMessage(
-    slackIds,
-    info.title,
-    info.url,
-    info.body,
-    info.senderName
-  );
-
   const { slackWebhookUrl, iconUrl, botName } = allInputs;
 
   await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
