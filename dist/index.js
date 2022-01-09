@@ -1529,9 +1529,9 @@ exports.convertToSlackUsername = async (githubUsernames, githubClient, repoToken
 };
 // Pull Request
 exports.execPullRequestMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d;
+    var _a, _b, _c;
     const { repoToken, configurationPath } = allInputs;
-    const pullRequestGithubUsername = (_b = (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
+    const pullRequestGithubUsername = (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.user.login;
     console.log(pullRequestGithubUsername);
     if (!pullRequestGithubUsername) {
         throw new Error("Can not find pull requested user.");
@@ -1541,8 +1541,8 @@ exports.execPullRequestMention = async (payload, allInputs, githubClient, slackC
         return;
     }
     const action = payload.action;
-    const title = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.title;
-    const url = (_d = payload.pull_request) === null || _d === void 0 ? void 0 : _d.html_url;
+    const title = (_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.title;
+    const url = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.html_url;
     const prSlackUserId = slackIds[0];
     const message = `<@${prSlackUserId}> has *${action}* pull request <${url}|${title}>.`;
     console.log(message);

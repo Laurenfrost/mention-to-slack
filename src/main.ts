@@ -51,7 +51,7 @@ export const execPullRequestMention = async (
   context: Pick<Context, "repo" | "sha">
 ): Promise<void> => {
   const { repoToken, configurationPath } = allInputs;
-  const pullRequestGithubUsername = payload.pull_request?.user?.login;
+  const pullRequestGithubUsername = payload.pull_request?.user.login;
   console.log(pullRequestGithubUsername);
   if (!pullRequestGithubUsername) {
     throw new Error("Can not find pull requested user.");
