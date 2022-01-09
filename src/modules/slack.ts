@@ -29,9 +29,6 @@ export const buildSlackPostMessage = (
   return `${message}\n${body}`;
 };
 
-const openIssueLink =
-  "https://github.com/Laurenfrost/mention-to-slack/issues/new";
-
 export const buildSlackErrorMessage = (
   error: Error,
   currentJobUrl?: string
@@ -41,15 +38,8 @@ export const buildSlackErrorMessage = (
     ? `<${currentJobUrl}|${jobTitle}>`
     : jobTitle;
 
-  const issueBody = error.stack
-    ? encodeURI(["```", error.stack, "```"].join("\n"))
-    : "";
-  const link = `${openIssueLink}?title=${error.message}&body=${issueBody}`;
-
   return [
     `❗ An internal error occurred in ${jobLinkMessage}`,
-    "(but action didn't fail as this action is not critical).",
-    `To solve the problem, please <${link}|open an issue>`,
     "",
     "```",
     error.stack || error.message,
