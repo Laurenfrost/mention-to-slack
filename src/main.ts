@@ -50,35 +50,54 @@ export const execPullRequestMention = async (
   slackClient: typeof SlackRepositoryImpl,
   context: Pick<Context, "repo" | "sha">
 ): Promise<void> => {
-  const { repoToken, configurationPath } = allInputs;
-  const pullRequestGithubUsername = payload.pull_request?.user.login;
-  console.log(pullRequestGithubUsername);
-  if (!pullRequestGithubUsername) {
-    throw new Error("Can not find pull requested user.");
-  }
-
+  const { repoToken, configurationPath, slackWebhookUrl, iconUrl, botName } = allInputs;
+  const action: string | undefined  = payload.action;
+  const prNumber: number | undefined  = payload.pull_request?.number
+  const prTitle: string | undefined = payload.pull_request?.title;
+  const prUrl: string | undefined  = payload.pull_request?.html_url;
+  const prGithubUserAvatar: string | undefined = payload.pull_request?.user.avatar_url
+  const prGithubUsername = payload.pull_request?.user.login;
   const slackIds = await convertToSlackUsername(
-    [pullRequestGithubUsername],
-    githubClient,
-    repoToken,
-    configurationPath,
-    context
+      [prGithubUsername],
+      githubClient,
+      repoToken,
+      configurationPath,
+      context
   );
-
-  if (slackIds.length === 0) {
-    return;
-  }
-
-  const action = payload.action;
-  const title = payload.pull_request?.title;
-  const url = payload.pull_request?.html_url;
   const prSlackUserId = slackIds[0];
-
-  const message = `<@${prSlackUserId}> has *${action}* pull request <${url}|${title}>.`;
-  console.log(message);
-  const { slackWebhookUrl, iconUrl, botName } = allInputs;
-
-  await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
+  const messageBlocks = [
+      {
+        "type": "header",
+        "text": {
+          "type": "plain_text",
+          "text": `Pull Request #${prNumber} ${action}`,
+          "emoji": true
+        }
+      },
+      {
+        "type": "context",
+        "elements": [
+          {
+            "type": "image",
+            "image_url": `${prGithubUserAvatar}`,
+            "alt_text": `GitHub User: ${prGithubUsername}`
+          },
+          {
+            "type": "mrkdwn",
+            "text": `*<@${prSlackUserId}>* has ${action} this pull request.`
+          },
+          {
+            "type": "mrkdwn",
+            "text": `*<${prUrl}|${prTitle}>*\n<${prUrl}|${prUrl}>`
+          },
+          {
+            "type": "mrkdwn",
+            "text": "_No description provided._"
+          }
+        ]
+      }
+    ]
+  await slackClient.postToSlack(slackWebhookUrl, messageBlocks, { iconUrl, botName });
 };
 
 // PR comment mentions
@@ -200,8 +219,8 @@ export const execPullRequestReviewMention = async (
 
   const msg1 = `reviewr is ${reviewerUsername}`
   const msg2 = `pull requester is ${pullRequestUsername}`
-  console.log(msg1)
-  console.log(msg2)
+  core.info(msg1)
+  core.info(msg2)
 
   const slackIds = await convertToSlackUsername(
     [reviewerUsername, pullRequestUsername],
@@ -456,14 +475,15 @@ export const main = async (): Promise<void> => {
 
   try {
     if (allInputs.debugFlag) {
+      core.info("All Inputs: \n${allInputs}")
       const message2 = `eventName is <${context.eventName}>.`;
-      console.log(message2);
+      core.info(message2);
       const message3 = `action is <${context.action}>.`;
-      console.log(message3);
+      core.info(message3);
       const message4 = `actor is <${context.actor}>.`;
-      console.log(message4);
+      core.info(message4);
       const message5 = `issue is <${payload.issue?.pull_request}>.`;
-      console.log(message5);
+      core.info(message5);
     }
 
     if (payload.action === "review_requested") {

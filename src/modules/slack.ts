@@ -53,7 +53,7 @@ export type SlackOption = {
 };
 
 type SlackPostParam = {
-  text: string;
+  blocks: any;
   link_names: 0 | 1;
   username: string;
   icon_url?: string;
@@ -66,7 +66,7 @@ const defaultIconEmoji = ":bell:";
 export const SlackRepositoryImpl = {
   postToSlack: async (
     webhookUrl: string,
-    message: string,
+    message_blocks: any,
     options?: SlackOption
   ): Promise<void> => {
     const botName = (() => {
@@ -78,7 +78,7 @@ export const SlackRepositoryImpl = {
     })();
 
     const slackPostParam: SlackPostParam = {
-      text: message,
+      blocks: message_blocks,
       link_names: 0,
       username: botName,
     };
