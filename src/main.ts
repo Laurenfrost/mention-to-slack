@@ -607,22 +607,17 @@ const getAllInputs = (): AllInputs => {
   } else {
     core.setFailed("Unknown input. You should set true or false for a debug flag.")
   }
-
-  const iconUrl = core.getInput("icon-url", { required: false });
   const botName = core.getInput("bot-name", { required: false });
   const configurationPath = core.getInput("configuration-path", {
     required: true,
   });
-  const runId = core.getInput("run-id", { required: false });
 
   return {
     repoToken,
     configurationPath,
     slackWebhookUrl,
     debugFlag,
-    iconUrl,
     botName,
-    runId,
   };
 };
 
@@ -632,15 +627,7 @@ export const main = async (): Promise<void> => {
 
   try {
     if (allInputs.debugFlag) {
-      core.info("All Inputs: \n${allInputs}")
-      const message2 = `eventName is <${context.eventName}>.`;
-      core.info(message2);
-      const message3 = `action is <${context.action}>.`;
-      core.info(message3);
-      const message4 = `actor is <${context.actor}>.`;
-      core.info(message4);
-      const message5 = `issue is <${payload.issue?.pull_request}>.`;
-      core.info(message5);
+      core.warning(JSON.stringify(context))
     }
 
     if (payload.action === "review_requested") {
@@ -652,7 +639,6 @@ export const main = async (): Promise<void> => {
         SlackRepositoryImpl,
         context
       );
-      core.debug(JSON.stringify({ payload }));
       return;
     }
 
@@ -666,7 +652,6 @@ export const main = async (): Promise<void> => {
             SlackRepositoryImpl,
             context
         );
-        core.debug(JSON.stringify({ payload }));
         return;
       }
       case "issue_comment": {
@@ -679,7 +664,6 @@ export const main = async (): Promise<void> => {
               SlackRepositoryImpl,
               context
           );
-          core.debug(JSON.stringify({ payload }));
           return;
         }
         else {
@@ -691,7 +675,6 @@ export const main = async (): Promise<void> => {
               SlackRepositoryImpl,
               context
           );
-          core.debug(JSON.stringify({ payload }));
           return;
         }
       }
@@ -704,7 +687,6 @@ export const main = async (): Promise<void> => {
             SlackRepositoryImpl,
             context
         );
-        core.debug(JSON.stringify({ payload }));
         return;
       }
       case "pull_request_review": {
@@ -716,7 +698,6 @@ export const main = async (): Promise<void> => {
             SlackRepositoryImpl,
             context
         );
-        core.debug(JSON.stringify({ payload }));
         return;
       }
       case "pull_request_review_comment": {
@@ -728,7 +709,6 @@ export const main = async (): Promise<void> => {
             SlackRepositoryImpl,
             context
         );
-        core.debug(JSON.stringify({ payload }));
         return;
       }
     }

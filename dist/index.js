@@ -1998,81 +1998,62 @@ const getAllInputs = () => {
     else {
         core.setFailed("Unknown input. You should set true or false for a debug flag.");
     }
-    const iconUrl = core.getInput("icon-url", { required: false });
     const botName = core.getInput("bot-name", { required: false });
     const configurationPath = core.getInput("configuration-path", {
         required: true,
     });
-    const runId = core.getInput("run-id", { required: false });
     return {
         repoToken,
         configurationPath,
         slackWebhookUrl,
         debugFlag,
-        iconUrl,
         botName,
-        runId,
     };
 };
 exports.main = async () => {
-    var _a, _b;
+    var _a;
     const { payload } = github_1.context;
     const allInputs = getAllInputs();
     try {
         if (allInputs.debugFlag) {
-            core.info("All Inputs: \n${allInputs}");
-            const message2 = `eventName is <${github_1.context.eventName}>.`;
-            core.info(message2);
-            const message3 = `action is <${github_1.context.action}>.`;
-            core.info(message3);
-            const message4 = `actor is <${github_1.context.actor}>.`;
-            core.info(message4);
-            const message5 = `issue is <${(_a = payload.issue) === null || _a === void 0 ? void 0 : _a.pull_request}>.`;
-            core.info(message5);
+            core.warning(JSON.stringify(github_1.context));
         }
         if (payload.action === "review_requested") {
             core.info("This action is a review requested.");
             await exports.execPrReviewRequestedMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
-            core.debug(JSON.stringify({ payload }));
             return;
         }
         switch (github_1.context.eventName) {
             case "pull_request": {
                 core.info("This action is a pull request.");
                 await exports.execPullRequestMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
-                core.debug(JSON.stringify({ payload }));
                 return;
             }
             case "issue_comment": {
-                if (((_b = payload.issue) === null || _b === void 0 ? void 0 : _b.pull_request) == undefined) {
+                if (((_a = payload.issue) === null || _a === void 0 ? void 0 : _a.pull_request) == undefined) {
                     core.info("This comment is on an Issue.");
                     await exports.execIssueCommentMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
-                    core.debug(JSON.stringify({ payload }));
                     return;
                 }
                 else {
                     core.info("This comment is on a pull request.");
                     await exports.execPrReviewRequestedCommentMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
-                    core.debug(JSON.stringify({ payload }));
                     return;
                 }
             }
             case "issues": {
                 core.info("This action is a issue.");
                 await exports.execIssueMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
-                core.debug(JSON.stringify({ payload }));
                 return;
             }
             case "pull_request_review": {
                 core.info("This action is a pull_request_review.");
                 await exports.execPullRequestReviewMention(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
-                core.debug(JSON.stringify({ payload }));
                 return;
             }
             case "pull_request_review_comment": {
                 core.info("This action is a pull_request_review_comment.");
                 await exports.execPullRequestReviewComment(payload, allInputs, github_2.GithubRepositoryImpl, slack_1.SlackRepositoryImpl, github_1.context);
-                core.debug(JSON.stringify({ payload }));
                 return;
             }
         }
@@ -14492,20 +14473,14 @@ exports.buildSlackErrorMessage = (error, currentJobUrl) => {
         "```",
     ].join("\n");
 };
-const defaultBotName = "Github Mention To Slack";
-const defaultIconEmoji = ":octocat:";
 exports.SlackRepositoryImpl = {
     postToSlack: async (webhookUrl, messageBlocks, botName) => {
-        botName = (() => {
-            if (botName && botName !== "") {
-                return botName;
-            }
-            return defaultBotName;
-        })();
+        const defaultBotName = "Github Mention To Slack";
+        const defaultIconEmoji = ":octocat:";
         const slackPostParam = {
-            blocks: messageBlocks,
-            username: botName,
-            icon_emoji: defaultIconEmoji
+            "blocks": messageBlocks,
+            "username": (botName && botName !== "") ? botName : defaultBotName,
+            "icon_emoji": defaultIconEmoji
         };
         await axios_1.default.post(webhookUrl, JSON.stringify(slackPostParam), {
             headers: { "Content-Type": "application/json" },
