@@ -22,8 +22,6 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git checkout release
-          git merge origin/master --no-commit --no-ff
       - name: Cache npm
         uses: actions/cache@v2
         with:
@@ -43,6 +41,6 @@ jobs:
         run: |
           git push \
             "https://${{ github.actor }}:${{ secrets.MY_GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
-            HEAD:release \
-            -f \
+            master:release \
+            --force \
             --tags
