@@ -234,7 +234,7 @@ export const execPrReviewRequestedMention = async (
         },
         {
           "type": "mrkdwn",
-          "text": `*<@${reviewerSlackUserId}>* is requested by *<@${requestSlackUserId}>.`
+          "text": `*<@${reviewerSlackUserId}>* is requested by *<@${requestSlackUserId}>*.`
         }
       ]
     }
