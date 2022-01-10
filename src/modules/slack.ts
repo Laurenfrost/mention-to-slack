@@ -1,34 +1,5 @@
 import axios from "axios";
 
-export const buildSlackPostMessage = (
-  slackIdsForMention: string[],
-  issueTitle: string,
-  commentLink: string,
-  githubBody: string,
-  senderName: string
-): string => {
-  const mentionBlock = slackIdsForMention.map((id) => `<@${id}>`).join(" ");
-  const body = githubBody
-    .split("\n")
-    .map((line, i) => {
-      // fix slack layout collapse problem when first line starts with blockquotes.
-      if (i === 0 && line.startsWith(">")) {
-        return `>\n> ${line}`;
-      }
-
-      return `> ${line}`;
-    })
-    .join("\n");
-
-  const message = [
-    mentionBlock,
-    `${slackIdsForMention.length === 1 ? "has" : "have"}`,
-    `been mentioned at <${commentLink}|${issueTitle}> by ${senderName}`,
-  ].join(" ");
-
-  return `${message}\n${body}`;
-};
-
 export const buildSlackErrorMessage = (
   error: Error,
   currentJobUrl?: string
@@ -47,48 +18,33 @@ export const buildSlackErrorMessage = (
   ].join("\n");
 };
 
-export type SlackOption = {
-  iconUrl?: string;
-  botName?: string;
-};
-
 type SlackPostParam = {
-  blocks: any;
-  link_names: 0 | 1;
+  blocks: any[];
   username: string;
-  icon_url?: string;
   icon_emoji?: string;
 };
 
 const defaultBotName = "Github Mention To Slack";
-const defaultIconEmoji = ":bell:";
+const defaultIconEmoji = ":octocat:";
 
 export const SlackRepositoryImpl = {
   postToSlack: async (
     webhookUrl: string,
-    message_blocks: any,
-    options?: SlackOption
+    messageBlocks: any[],
+    botName?: string
   ): Promise<void> => {
-    const botName = (() => {
-      const n = options?.botName;
-      if (n && n !== "") {
-        return n;
+    botName = (() => {
+      if (botName && botName !== "") {
+        return botName;
       }
       return defaultBotName;
     })();
 
     const slackPostParam: SlackPostParam = {
-      blocks: message_blocks,
-      link_names: 0,
+      blocks: messageBlocks,
       username: botName,
+      icon_emoji: defaultIconEmoji
     };
-
-    const u = options?.iconUrl;
-    if (u && u !== "") {
-      slackPostParam.icon_url = u;
-    } else {
-      slackPostParam.icon_emoji = defaultIconEmoji;
-    }
 
     await axios.post(webhookUrl, JSON.stringify(slackPostParam), {
       headers: { "Content-Type": "application/json" },
