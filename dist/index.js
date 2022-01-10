@@ -1529,14 +1529,15 @@ exports.convertToSlackUsername = async (githubUsernames, githubClient, repoToken
 };
 // Pull Request
 exports.execPullRequestMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e;
-    const { repoToken, configurationPath, slackWebhookUrl, iconUrl, botName } = allInputs;
+    var _a, _b, _c, _d, _e, _f;
+    const { repoToken, configurationPath, slackWebhookUrl, botName } = allInputs;
     const action = payload.action;
     const prNumber = (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.number;
     const prTitle = (_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.title;
     const prUrl = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.html_url;
-    const prGithubUserAvatar = (_d = payload.pull_request) === null || _d === void 0 ? void 0 : _d.user.avatar_url;
-    const prGithubUsername = (_e = payload.pull_request) === null || _e === void 0 ? void 0 : _e.user.login;
+    const prBody = (_d = payload.pull_request) === null || _d === void 0 ? void 0 : _d.body;
+    const prGithubUserAvatar = (_e = payload.pull_request) === null || _e === void 0 ? void 0 : _e.user.avatar_url;
+    const prGithubUsername = (_f = payload.pull_request) === null || _f === void 0 ? void 0 : _f.user.login;
     const slackIds = await exports.convertToSlackUsername([prGithubUsername], githubClient, repoToken, configurationPath, context);
     const prSlackUserId = slackIds[0];
     const messageBlocks = [
@@ -1553,7 +1554,7 @@ exports.execPullRequestMention = async (payload, allInputs, githubClient, slackC
             "elements": [
                 {
                     "type": "image",
-                    "image_url": `${prGithubUserAvatar}`,
+                    "image_url": prGithubUserAvatar,
                     "alt_text": `GitHub User: ${prGithubUsername}`
                 },
                 {
@@ -1566,209 +1567,408 @@ exports.execPullRequestMention = async (payload, allInputs, githubClient, slackC
                 },
                 {
                     "type": "mrkdwn",
-                    "text": "_No description provided._"
+                    "text": (prBody && prBody != "") ? prBody : "_No description provided._"
                 }
             ]
         }
     ];
-    await slackClient.postToSlack(slackWebhookUrl, messageBlocks, { iconUrl, botName });
+    await slackClient.postToSlack(slackWebhookUrl, messageBlocks, botName);
 };
 // PR comment mentions
 exports.execPrReviewRequestedCommentMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
     const { repoToken, configurationPath } = allInputs;
-    const commentGithubUsername = (_b = (_a = payload.comment) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
-    const pullRequestedGithubUsername = (_d = (_c = payload.issue) === null || _c === void 0 ? void 0 : _c.user) === null || _d === void 0 ? void 0 : _d.login;
-    if (!commentGithubUsername) {
-        throw new Error("Can not find comment user.");
-    }
-    if (!pullRequestedGithubUsername) {
-        throw new Error("Can not find pull request user.");
-    }
-    const slackIds = await exports.convertToSlackUsername([commentGithubUsername, pullRequestedGithubUsername], githubClient, repoToken, configurationPath, context);
-    if (slackIds.length === 0) {
-        return;
-    }
     const action = payload.action;
-    const pr_title = (_e = payload.issue) === null || _e === void 0 ? void 0 : _e.title;
-    const pr_state = (_f = payload.issue) === null || _f === void 0 ? void 0 : _f.state;
-    const comment_body = (_g = payload.comment) === null || _g === void 0 ? void 0 : _g.body;
-    const comment_url = (_h = payload.comment) === null || _h === void 0 ? void 0 : _h.html_url;
+    const prNumber = (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.number;
+    const prTitle = (_b = payload.issue) === null || _b === void 0 ? void 0 : _b.title;
+    const prUrl = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.html_url;
+    // const prState = payload.issue?.state as string;
+    const commentBody = (_d = payload.comment) === null || _d === void 0 ? void 0 : _d.body;
+    const commentUrl = (_e = payload.comment) === null || _e === void 0 ? void 0 : _e.html_url;
+    const commentUsername = (_g = (_f = payload.comment) === null || _f === void 0 ? void 0 : _f.user) === null || _g === void 0 ? void 0 : _g.login;
+    const commentUserAvatar = (_j = (_h = payload.comment) === null || _h === void 0 ? void 0 : _h.user) === null || _j === void 0 ? void 0 : _j.avatar_url;
+    const prUsername = (_l = (_k = payload.issue) === null || _k === void 0 ? void 0 : _k.user) === null || _l === void 0 ? void 0 : _l.login;
+    const slackIds = await exports.convertToSlackUsername([commentUsername, prUsername], githubClient, repoToken, configurationPath, context);
     const commentSlackUserId = slackIds[0];
-    const pullRequestedSlackUserId = slackIds[1];
+    const prSlackUserId = slackIds[1];
     // show comment text as quote text.
-    const comment_lines = comment_body.split("\n");
-    let comment_as_quote = "";
-    comment_lines.forEach(line => {
-        core.warning(line);
-        comment_as_quote += (">" + line);
-    });
-    const message = `<@${commentSlackUserId}> has *${action}* a comment on a *${pr_state}* pull request <@${pullRequestedSlackUserId}> *${pr_title}*:\n${comment_as_quote}\n${comment_url}.`;
-    core.warning(message);
-    const { slackWebhookUrl, iconUrl, botName } = allInputs;
-    await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
+    // const comment_lines = commentBody.split("\n")
+    // let comment_as_quote = "";
+    // comment_lines.forEach(line => {
+    //   core.warning(line)
+    //   comment_as_quote += (">" + line);
+    // })
+    const messageBlocks = [
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": `Comment on Pull Request #${prNumber}`,
+                "emoji": true
+            }
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": `\n*<${prUrl}|${prTitle}>*\n<${prUrl}|${prUrl}>`
+                }
+            ]
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "image",
+                    "image_url": commentUserAvatar,
+                    "alt_text": "GitHub User"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": `*<@${commentSlackUserId}>* has ${action} a comment review. *<@${prSlackUserId}>*\n<${commentUrl}|${commentUrl}>`
+                }
+            ]
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": (commentBody && commentBody != "") ? commentBody : "_No description provided._"
+                }
+            ]
+        }
+    ];
+    const { slackWebhookUrl, botName } = allInputs;
+    await slackClient.postToSlack(slackWebhookUrl, messageBlocks, botName);
 };
 // Review Requested
 exports.execPrReviewRequestedMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e;
-    const { repoToken, configurationPath } = allInputs;
-    const requestedGithubUsername = ((_a = payload.requested_reviewer) === null || _a === void 0 ? void 0 : _a.login) || ((_b = payload.requested_team) === null || _b === void 0 ? void 0 : _b.name);
-    const requestUsername = (_c = payload.sender) === null || _c === void 0 ? void 0 : _c.login;
-    if (!requestedGithubUsername) {
-        throw new Error("Can not find review requested user.");
-    }
-    if (!requestUsername) {
-        throw new Error("Can not find review request user.");
-    }
-    const slackIds = await exports.convertToSlackUsername([requestedGithubUsername, requestUsername], githubClient, repoToken, configurationPath, context);
-    if (slackIds.length === 0) {
-        return;
-    }
-    const title = (_d = payload.pull_request) === null || _d === void 0 ? void 0 : _d.title;
-    const url = (_e = payload.pull_request) === null || _e === void 0 ? void 0 : _e.html_url;
-    const requestedSlackUserId = slackIds[0];
+    var _a, _b, _c, _d, _e, _f, _g;
+    const { repoToken, configurationPath, slackWebhookUrl, botName } = allInputs;
+    const prNumber = (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.number;
+    const prTitle = (_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.title;
+    const prUrl = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.html_url;
+    const reviewerUsername = ((_d = payload.requested_reviewer) === null || _d === void 0 ? void 0 : _d.login) || ((_e = payload.requested_team) === null || _e === void 0 ? void 0 : _e.name);
+    const reviewerUserAvatar = (_f = payload.requested_reviewer) === null || _f === void 0 ? void 0 : _f.avatar_url;
+    const requestUsername = (_g = payload.sender) === null || _g === void 0 ? void 0 : _g.login;
+    const slackIds = await exports.convertToSlackUsername([reviewerUsername, requestUsername], githubClient, repoToken, configurationPath, context);
+    const reviewerSlackUserId = slackIds[0];
     const requestSlackUserId = slackIds[1];
-    const message = `<@${requestedSlackUserId}> has been requested to review <${url}|${title}> by <@${requestSlackUserId}>.`;
-    const { slackWebhookUrl, iconUrl, botName } = allInputs;
-    await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
+    const messageBlocks = [
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": `Reviewer Requested on Pull Request #${prNumber}`,
+                "emoji": true
+            }
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": `\n*<${prUrl}|${prTitle}>*\n<${prUrl}|${prUrl}>`
+                }
+            ]
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "image",
+                    "image_url": reviewerUserAvatar,
+                    "alt_text": "GitHub User"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": `*<@${reviewerSlackUserId}>* is requested by *<@${requestSlackUserId}>.`
+                }
+            ]
+        }
+    ];
+    await slackClient.postToSlack(slackWebhookUrl, messageBlocks, botName);
 };
 // pull_request_review
 exports.execPullRequestReviewMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
-    const { repoToken, configurationPath } = allInputs;
-    const reviewerUsername = (_b = (_a = payload.review) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
-    const pullRequestUsername = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.user.login;
-    if (!reviewerUsername) {
-        throw new Error("Can not find review user.");
-    }
-    if (!pullRequestUsername) {
-        throw new Error("Can not find pull request user.");
-    }
-    const msg1 = `reviewr is ${reviewerUsername}`;
-    const msg2 = `pull requester is ${pullRequestUsername}`;
-    core.info(msg1);
-    core.info(msg2);
-    const slackIds = await exports.convertToSlackUsername([reviewerUsername, pullRequestUsername], githubClient, repoToken, configurationPath, context);
-    if (slackIds.length === 0) {
-        return;
-    }
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+    const { repoToken, configurationPath, slackWebhookUrl, botName } = allInputs;
     const action = payload.action;
-    const title = (_d = payload.pull_request) === null || _d === void 0 ? void 0 : _d.title;
-    const url = (_e = payload.pull_request) === null || _e === void 0 ? void 0 : _e.html_url;
-    const state = (_f = payload.pull_request) === null || _f === void 0 ? void 0 : _f.state;
-    const body = (_g = payload.review) === null || _g === void 0 ? void 0 : _g.body;
-    const review_url = (_h = payload.review) === null || _h === void 0 ? void 0 : _h.html_url;
+    const prNumber = (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.number;
+    const prTitle = (_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.title;
+    const prUrl = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.html_url;
+    // const prState = payload.pull_request?.state as string;
+    const reviewBody = (_d = payload.review) === null || _d === void 0 ? void 0 : _d.body;
+    const reviewState = (_e = payload.review) === null || _e === void 0 ? void 0 : _e.state;
+    const reviewUrl = (_f = payload.review) === null || _f === void 0 ? void 0 : _f.html_url;
+    const reviewerUsername = (_h = (_g = payload.review) === null || _g === void 0 ? void 0 : _g.user) === null || _h === void 0 ? void 0 : _h.login;
+    const reviewerUserAvatar = (_k = (_j = payload.review) === null || _j === void 0 ? void 0 : _j.user) === null || _k === void 0 ? void 0 : _k.avatar_url;
+    const prUsername = (_l = payload.pull_request) === null || _l === void 0 ? void 0 : _l.user.login;
+    const slackIds = await exports.convertToSlackUsername([reviewerUsername, prUsername], githubClient, repoToken, configurationPath, context);
     const reviewerSlackUserId = slackIds[0];
-    const pullRequestSlackUserId = slackIds[1];
-    const cm_state = (_j = payload.review) === null || _j === void 0 ? void 0 : _j.state;
-    const message = (cm_state === "approved") ?
-        `<@${reviewerSlackUserId}> has *approved* Pull Request <${url}|${title}>, which created by <@${pullRequestSlackUserId}>\n ${review_url}`
-        :
-            `<@${reviewerSlackUserId}> has *${action}* a review on *${state}* Pull Request <${url}|${title}>, which created by <@${pullRequestSlackUserId}>.\n ${body} \n ${review_url}`;
-    const { slackWebhookUrl, iconUrl, botName } = allInputs;
-    await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
+    const prSlackUserId = slackIds[1];
+    const messageBlocks = [
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": (reviewState === "approved") ?
+                    `Approved on Pull Request #${prNumber}` :
+                    `Comment on Pull Request #${prNumber}`,
+                "emoji": true
+            }
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": `\n*<${prUrl}|${prTitle}>*\n<${prUrl}|${prUrl}>`
+                }
+            ]
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "image",
+                    "image_url": reviewerUserAvatar,
+                    "alt_text": "GitHub User"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": (reviewState === "approved") ?
+                        `<@${reviewerSlackUserId}> has *Approved* Pull Request *<@${prSlackUserId}>*.` :
+                        `*<@${reviewerSlackUserId}>* has ${action} a comment review *<@${prSlackUserId}>*.\n<${reviewUrl}|${reviewUrl}>`
+                }
+            ]
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": `${(reviewBody && reviewBody != "") ? reviewBody : "_No description provided._"}`
+                }
+            ]
+        }
+    ];
+    await slackClient.postToSlack(slackWebhookUrl, messageBlocks, botName);
 };
 // pull_request_review_comment
 exports.execPullRequestReviewComment = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
-    const { repoToken, configurationPath } = allInputs;
-    const reviewerCommentUsername = (_b = (_a = payload.comment) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
-    const pullRequestUsername = (_d = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.user) === null || _d === void 0 ? void 0 : _d.login;
-    if (!reviewerCommentUsername) {
-        throw new Error("Can not find review comment user.");
-    }
-    if (!pullRequestUsername) {
-        throw new Error("Can not find pull request user.");
-    }
-    const slackIds = await exports.convertToSlackUsername([reviewerCommentUsername, pullRequestUsername], githubClient, repoToken, configurationPath, context);
-    if (slackIds.length === 0) {
-        return;
-    }
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+    const { repoToken, configurationPath, slackWebhookUrl, botName } = allInputs;
     const action = payload.action;
-    const title = (_e = payload.pull_request) === null || _e === void 0 ? void 0 : _e.title;
-    const url = (_f = payload.pull_request) === null || _f === void 0 ? void 0 : _f.html_url;
-    const state = (_g = payload.pull_request) === null || _g === void 0 ? void 0 : _g.state;
-    const body = (_h = payload.comment) === null || _h === void 0 ? void 0 : _h.body;
-    const changeFilePath = (_j = payload.comment) === null || _j === void 0 ? void 0 : _j.path;
-    const diffHunk = (_k = payload.comment) === null || _k === void 0 ? void 0 : _k.diff_hunk;
-    const comment_url = (_l = payload.comment) === null || _l === void 0 ? void 0 : _l.html_url;
-    const reviewCommentSlackUserId = slackIds[0];
-    const pullRequestSlackUserId = slackIds[1];
-    const message = `<@${reviewCommentSlackUserId}> has *${action}* a comment review on *${state}* Pull Request <${url}|${title}>, which created by <@${pullRequestSlackUserId}>.\n \n\`\`\`${changeFilePath}\n${diffHunk}\`\`\`\n${body}\n${comment_url}`;
-    const { slackWebhookUrl, iconUrl, botName } = allInputs;
-    await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
+    const prNumber = (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.number;
+    const prTitle = (_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.title;
+    const prUrl = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.html_url;
+    // const prState = payload.pull_request?.state as string;
+    const commentBody = (_d = payload.comment) === null || _d === void 0 ? void 0 : _d.body;
+    const changeFilePath = (_e = payload.comment) === null || _e === void 0 ? void 0 : _e.path;
+    // const diffHunk = payload.comment?.diff_hunk as string;
+    const commentUrl = (_f = payload.comment) === null || _f === void 0 ? void 0 : _f.html_url;
+    const commentUsername = (_h = (_g = payload.comment) === null || _g === void 0 ? void 0 : _g.user) === null || _h === void 0 ? void 0 : _h.login;
+    const commentUserAvatar = (_k = (_j = payload.comment) === null || _j === void 0 ? void 0 : _j.user) === null || _k === void 0 ? void 0 : _k.avatar_url;
+    const prUsername = (_m = (_l = payload.pull_request) === null || _l === void 0 ? void 0 : _l.user) === null || _m === void 0 ? void 0 : _m.login;
+    // const assigneeUsername = payload.pull_request?.assignee.login as string
+    // const reviewerUsername = payload.pull_request?.requested_reviewers.login as string
+    const slackIds = await exports.convertToSlackUsername([commentUsername, prUsername], githubClient, repoToken, configurationPath, context);
+    const commentSlackUserId = slackIds[0];
+    const prSlackUserId = slackIds[1];
+    const messageBlocks = [
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": `Comment on Pull Request #${prNumber}`,
+                "emoji": true
+            }
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": `\n*<${prUrl}|${prTitle}>*\n<${prUrl}|${prUrl}>`
+                }
+            ]
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "image",
+                    "image_url": commentUserAvatar,
+                    "alt_text": "GitHub User"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": `*<@${commentSlackUserId}>* has ${action} a comment review. *<@${prSlackUserId}>*\n<${commentUrl}|${commentUrl}>`
+                }
+            ]
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": `*${changeFilePath}*\n${(commentBody && commentBody != "") ? commentBody : "_No description provided._"}`
+                }
+            ]
+        }
+    ];
+    await slackClient.postToSlack(slackWebhookUrl, messageBlocks, botName);
 };
 // Issue metion
 exports.execIssueMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e;
-    const { repoToken, configurationPath } = allInputs;
-    const issueGithubUsername = (_b = (_a = payload.issue) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
-    if (!issueGithubUsername) {
-        throw new Error("Can not find issue user.");
-    }
-    const slackIds = await exports.convertToSlackUsername([issueGithubUsername], githubClient, repoToken, configurationPath, context);
-    if (slackIds.length === 0) {
-        return;
-    }
+    var _a, _b, _c, _d, _e, _f, _g, _h;
+    const { repoToken, configurationPath, slackWebhookUrl, botName } = allInputs;
     const action = payload.action;
-    const issue_title = (_c = payload.issue) === null || _c === void 0 ? void 0 : _c.title;
-    // const issue_state = payload.issue?.state as string;
-    const issue_body = (_d = payload.issue) === null || _d === void 0 ? void 0 : _d.body;
-    const issue_url = (_e = payload.issue) === null || _e === void 0 ? void 0 : _e.html_url;
+    const issueNumber = (_a = payload.issue) === null || _a === void 0 ? void 0 : _a.number;
+    const issueTitle = (_b = payload.issue) === null || _b === void 0 ? void 0 : _b.title;
+    // const issueState = payload.issue?.state as string;
+    const issueBody = (_c = payload.issue) === null || _c === void 0 ? void 0 : _c.body;
+    const issueUrl = (_d = payload.issue) === null || _d === void 0 ? void 0 : _d.html_url;
+    const issueUsername = (_f = (_e = payload.issue) === null || _e === void 0 ? void 0 : _e.user) === null || _f === void 0 ? void 0 : _f.login;
+    const issueUserAvatar = (_h = (_g = payload.issue) === null || _g === void 0 ? void 0 : _g.user) === null || _h === void 0 ? void 0 : _h.avatar_url;
+    const slackIds = await exports.convertToSlackUsername([issueUsername], githubClient, repoToken, configurationPath, context);
     const issueSlackUserId = slackIds[0];
-    const message = (action === "opened") ?
-        `<@${issueSlackUserId}> has *${action}* an issue <${issue_url}|${issue_title}>:\n${issue_body}.` :
-        `<@${issueSlackUserId}> has *${action}* an issue <${issue_url}|${issue_title}>.`;
-    core.warning(message);
-    const { slackWebhookUrl, iconUrl, botName } = allInputs;
-    await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
+    const messageBlocks = [
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": `Issue #${issueNumber} ${action}`,
+                "emoji": true
+            }
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": `*<${issueUrl}|${issueTitle}>*\n<${issueUrl}|${issueUrl}>`
+                }
+            ]
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "image",
+                    "image_url": issueUserAvatar,
+                    "alt_text": "GitHub User"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": `*<@${issueSlackUserId}>* has ${action} an issue.`
+                }
+            ]
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": (issueBody && issueBody != "") ? issueBody : "_No description provided._"
+                }
+            ]
+        }
+    ];
+    await slackClient.postToSlack(slackWebhookUrl, messageBlocks, botName);
 };
 // Issue comment mentions
 exports.execIssueCommentMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
-    const { repoToken, configurationPath } = allInputs;
-    const commentGithubUsername = (_b = (_a = payload.comment) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
-    const issueGithubUsername = (_d = (_c = payload.issue) === null || _c === void 0 ? void 0 : _c.user) === null || _d === void 0 ? void 0 : _d.login;
-    if (!commentGithubUsername) {
-        throw new Error("Can not find comment user.");
-    }
-    if (!issueGithubUsername) {
-        throw new Error("Can not find issue user.");
-    }
-    const slackIds = await exports.convertToSlackUsername([commentGithubUsername, issueGithubUsername], githubClient, repoToken, configurationPath, context);
-    if (slackIds.length === 0) {
-        return;
-    }
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+    const { repoToken, configurationPath, slackWebhookUrl, botName } = allInputs;
     const action = payload.action;
-    const issue_title = (_e = payload.issue) === null || _e === void 0 ? void 0 : _e.title;
-    const issue_state = (_f = payload.issue) === null || _f === void 0 ? void 0 : _f.state;
-    const comment_body = (_g = payload.comment) === null || _g === void 0 ? void 0 : _g.body;
-    const comment_url = (_h = payload.comment) === null || _h === void 0 ? void 0 : _h.html_url;
+    const issueNumber = (_a = payload.issue) === null || _a === void 0 ? void 0 : _a.number;
+    const issueTitle = (_b = payload.issue) === null || _b === void 0 ? void 0 : _b.title;
+    // const issueState = payload.issue?.state as string;
+    const issueUrl = (_c = payload.issue) === null || _c === void 0 ? void 0 : _c.html_url;
+    const commentBody = (_d = payload.comment) === null || _d === void 0 ? void 0 : _d.body;
+    const commentUrl = (_e = payload.comment) === null || _e === void 0 ? void 0 : _e.html_url;
+    const commentUsername = (_g = (_f = payload.comment) === null || _f === void 0 ? void 0 : _f.user) === null || _g === void 0 ? void 0 : _g.login;
+    const commentUserAvatar = (_j = (_h = payload.comment) === null || _h === void 0 ? void 0 : _h.user) === null || _j === void 0 ? void 0 : _j.avatar_url;
+    const issueUsername = (_l = (_k = payload.issue) === null || _k === void 0 ? void 0 : _k.user) === null || _l === void 0 ? void 0 : _l.login;
+    const slackIds = await exports.convertToSlackUsername([commentUsername, issueUsername], githubClient, repoToken, configurationPath, context);
     const commentSlackUserId = slackIds[0];
     const issueSlackUserId = slackIds[1];
-    // show comment text as quote text.
-    const comment_lines = comment_body.split("\n");
-    let comment_as_quote = "";
-    comment_lines.forEach(line => {
-        core.warning(line);
-        comment_as_quote += (">" + line);
-    });
-    const message = `<@${commentSlackUserId}> has *${action}* a comment on a *${issue_state}* issue <@${issueSlackUserId}> *${issue_title}*:\n${comment_as_quote}\n${comment_url}.`;
-    core.warning(message);
-    const { slackWebhookUrl, iconUrl, botName } = allInputs;
-    await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
+    const messageBlocks = [
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": `Issue #${issueNumber} ${action}`,
+                "emoji": true
+            }
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": `*<${issueUrl}|${issueTitle}>*\n<${issueUrl}|${issueUrl}>`
+                }
+            ]
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "image",
+                    "image_url": commentUserAvatar,
+                    "alt_text": "GitHub User"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": `*<@${commentSlackUserId}>* has ${action} a comment *<@${issueSlackUserId}>*.\n<${commentUrl}|${commentUrl}>`
+                }
+            ]
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": (commentBody && commentBody != "") ? commentBody : "_No description provided._"
+                }
+            ]
+        }
+    ];
+    await slackClient.postToSlack(slackWebhookUrl, messageBlocks, botName);
 };
 const buildCurrentJobUrl = (runId) => {
     const { owner, repo } = github_1.context.repo;
     return `https://github.com/${owner}/${repo}/actions/runs/${runId}`;
 };
 exports.execPostError = async (error, allInputs, slackClient) => {
-    const { runId } = allInputs;
+    const { runId, slackWebhookUrl, botName } = allInputs;
     const currentJobUrl = runId ? buildCurrentJobUrl(runId) : undefined;
     const message = slack_1.buildSlackErrorMessage(error, currentJobUrl);
-    core.warning(message);
-    const { slackWebhookUrl, iconUrl, botName } = allInputs;
-    await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
+    const messageBlocks = [
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": `Error Occurred`,
+                "emoji": true
+            }
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": message
+                }
+            ]
+        }
+    ];
+    await slackClient.postToSlack(slackWebhookUrl, messageBlocks, botName);
 };
 const getAllInputs = () => {
     const slackWebhookUrl = core.getInput("slack-webhook-url", {
@@ -14277,27 +14477,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SlackRepositoryImpl = exports.buildSlackErrorMessage = exports.buildSlackPostMessage = void 0;
+exports.SlackRepositoryImpl = exports.buildSlackErrorMessage = void 0;
 const axios_1 = __importDefault(__webpack_require__(53));
-exports.buildSlackPostMessage = (slackIdsForMention, issueTitle, commentLink, githubBody, senderName) => {
-    const mentionBlock = slackIdsForMention.map((id) => `<@${id}>`).join(" ");
-    const body = githubBody
-        .split("\n")
-        .map((line, i) => {
-        // fix slack layout collapse problem when first line starts with blockquotes.
-        if (i === 0 && line.startsWith(">")) {
-            return `>\n> ${line}`;
-        }
-        return `> ${line}`;
-    })
-        .join("\n");
-    const message = [
-        mentionBlock,
-        `${slackIdsForMention.length === 1 ? "has" : "have"}`,
-        `been mentioned at <${commentLink}|${issueTitle}> by ${senderName}`,
-    ].join(" ");
-    return `${message}\n${body}`;
-};
 exports.buildSlackErrorMessage = (error, currentJobUrl) => {
     const jobTitle = "mention-to-slack action";
     const jobLinkMessage = currentJobUrl
@@ -14312,28 +14493,20 @@ exports.buildSlackErrorMessage = (error, currentJobUrl) => {
     ].join("\n");
 };
 const defaultBotName = "Github Mention To Slack";
-const defaultIconEmoji = ":bell:";
+const defaultIconEmoji = ":octocat:";
 exports.SlackRepositoryImpl = {
-    postToSlack: async (webhookUrl, message_blocks, options) => {
-        const botName = (() => {
-            const n = options === null || options === void 0 ? void 0 : options.botName;
-            if (n && n !== "") {
-                return n;
+    postToSlack: async (webhookUrl, messageBlocks, botName) => {
+        botName = (() => {
+            if (botName && botName !== "") {
+                return botName;
             }
             return defaultBotName;
         })();
         const slackPostParam = {
-            blocks: message_blocks,
-            link_names: 0,
+            blocks: messageBlocks,
             username: botName,
+            icon_emoji: defaultIconEmoji
         };
-        const u = options === null || options === void 0 ? void 0 : options.iconUrl;
-        if (u && u !== "") {
-            slackPostParam.icon_url = u;
-        }
-        else {
-            slackPostParam.icon_emoji = defaultIconEmoji;
-        }
         await axios_1.default.post(webhookUrl, JSON.stringify(slackPostParam), {
             headers: { "Content-Type": "application/json" },
         });
