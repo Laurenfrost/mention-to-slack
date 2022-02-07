@@ -11,12 +11,21 @@ This action sends mention to your slack account when you have been mentioned at 
 - Send context to slack if you comment on a PR or Issue. 
   *Both PR comments and Issue comments are triggered by issue_comment event.*
   *And workflows should be at default branch to trigger issue_comment event.*
-  ![PR & comment](pics/20210120181021.png)
-  ![PR & comment](pics/20210120181316.png)
-
 - Distinguish an approve from other pull request review events.
 - Return GitHub ID when Slack ID is not found in `.github/mention-to-slack.yml`
-  ![approve](pics/20210120180639.png)
+
+
+## Example 
+
+https://github.com/Laurenfrost/ActionsTest/issues/10
+
+![pr](./pics/20220207234256.png)
+
+![issue](./pics/20220207234140.png)
+
+![issue](./pics/20220207234046.png)
+
+![error](./pics/20220207234205.png)
 
 ## TODO
 
